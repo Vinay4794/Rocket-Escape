@@ -1,133 +1,244 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>Rocket Escape</title>
-  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="stylesheet" href="/static/style.css"/>
 </head>
-
 <body>
-  <!-- Cream UI background -->
-  <div class="space">
-    <div class="stars"></div>
-    <div class="stars2"></div>
-    <div class="nebula"></div>
-    <div class="scanlines"></div>
+
+  <!-- background -->
+  <div class="bg">
+    <div class="aurora a1"></div>
+    <div class="aurora a2"></div>
+    <div class="aurora a3"></div>
+    <div class="noise"></div>
+    <div class="grid"></div>
   </div>
 
   <div class="app">
-    <!-- HUD -->
-    <header class="hudbar">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
       <div class="brand">
-        <h1 class="game-title">
-  🚀 Rocket Survival
-      </h1>
-
-        <div class="brand-sub">Survive • Collect Stars • Avoid Lasers</div>
-      </div>
-
-      <div class="hud">
-        <div class="hud-card">
-          <span class="k">Score</span>
-          <span id="score" class="v">0</span>
-        </div>
-
-        <div class="hud-card">
-          <span class="k">High</span>
-          <span id="highscore" class="v">0</span>
-        </div>
-
-        <div class="hud-card">
-          <span class="k">Lives</span>
-          <span id="lives" class="v">3</span>
-        </div>
-
-        <div class="hud-card danger">
-          <span class="k">Missed Stars</span>
-          <span id="missedOrbs" class="v">0/7</span>
+        <div class="logo">🚀</div>
+        <div class="brandText">
+          <h1>Rocket Escape</h1>
+          <p>Dodge • Collect • Survive Boss Mode</p>
         </div>
       </div>
+
+      <div class="topRight">
+
+  <div class="modeBox">
+    <div class="modeLabel">Mode</div>
+    <select id="modeSelect" class="select">
+      <option value="easy">Easy</option>
+      <option value="medium" selected>Medium</option>
+      <option value="hard">Hard</option>
+    </select>
+  </div>
+
+  <!-- ✅ NEW: Controls ribbon in Title bar -->
+  <div class="ribbonControls">
+    <button id="soundBtn" class="ribbonBtn" title="Sound">🔊</button>
+    <button id="startBtn" class="ribbonBtn primary" title="Start">Start</button>
+    <button id="pauseBtn" class="ribbonBtn" title="Pause">Pause</button>
+    <button id="restartBtn" class="ribbonBtn" title="Restart">↻</button>
+  </div>
+
+  <button id="drawerBtn" class="iconBtn" title="Menu">☰</button>
+</div>
+
     </header>
 
-    <!-- Game -->
-    <main class="game-area">
-      <section class="stage">
-        <div class="stage-inner">
-          <canvas id="canvas" width="900" height="520"></canvas>
+    <!-- MAIN LAYOUT -->
+    <main class="layout">
 
-          <div class="hint">
-            <b>Desktop:</b> ← → Move • Space Boost • P Pause
+      <!-- LEFT PANEL -->
+      <aside class="panel left">
+        <div class="panelTitle">Dashboard</div>
+
+        <div class="statGrid">
+          <div class="statCard">
+            <div class="k">Score</div>
+            <div class="v" id="score">0</div>
           </div>
-
-          <!-- Overlay -->
-          <div class="overlay" id="overlay">
-            <div class="panel">
-              <div class="panel-title">Rocket Escape</div>
-              <div class="panel-sub">
-                Collect <b>Gold Stars</b> for score. Grab <b>Blue Stars</b> for +1 life.
-                Avoid meteors, debris, satellites & lasers.
-              </div>
-
-              <div class="panel-actions">
-                <button id="startBtn" class="btn primary">Start Game</button>
-                <button id="howBtn" class="btn ghost">How to Play</button>
-              </div>
-
-              <div class="badges">
-                <span class="badge">⭐ Gold Star: +25</span>
-                <span class="badge">🔷 Blue Star: +1 Life</span>
-                <span class="badge">☄️ Meteor: -1 Life</span>
-                <span class="badge">🛰️ Satellite: -1 Life</span>
-              </div>
-            </div>
+          <div class="statCard">
+            <div class="k">High</div>
+            <div class="v" id="highScoreTop">0</div>
           </div>
-
-          <div class="overlay hidden" id="how">
-            <div class="panel">
-              <div class="panel-title">How to Play</div>
-              <ul class="rules">
-                <li>Move left/right to dodge obstacles.</li>
-                <li>Gold Star gives score.</li>
-                <li>Blue Star gives +1 life (falls very fast).</li>
-                <li>Miss more than 7 gold stars => Lose.</li>
-            
-              </ul>
-              <div class="panel-actions">
-                <button id="closeHow" class="btn primary">Back</button>
-              </div>
-            </div>
+          <div class="statCard">
+            <div class="k">Best</div>
+            <div class="v" id="best">0</div>
           </div>
+          <div class="statCard">
+            <div class="k">Status</div>
+            <div class="v small" id="status">Ready</div>
+          </div>
+        </div>
 
-          <div class="toast" id="toast">Paused</div>
+        <div class="block">
+          <div class="blockHead">
+            <span>Difficulty</span>
+            <span class="tag" id="diffLabel">Medium</span>
+          </div>
+          <div class="bar">
+            <div class="barFill" id="difficultyProgress"></div>
+          </div>
+          <div class="muted">Increases with score</div>
 
-          <!-- Mobile controls -->
-          <div class="mobile-controls">
-            <div class="touch-pad" id="touchPad">
-              <div class="touch-dot" id="touchDot"></div>
-            </div>
+          <div style="display:none">
+            <div id="diffFill"></div>
+          </div>
+        </div>
 
-            <div class="touch-actions">
-              <button id="boostBtn" class="big-btn">BOOST</button>
-              <button id="pauseBtnMobile" class="mini-btn">PAUSE</button>
+        <div class="block">
+          <div class="blockHead">
+            <span>Quick Keys</span>
+            <span class="tag hot">Keyboard</span>
+          </div>
+          <div class="keyRow">
+            <span class="key">Enter</span><span class="keyDesc">Start</span>
+          </div>
+          <div class="keyRow">
+            <span class="key">Esc</span><span class="keyDesc">Pause</span>
+          </div>
+          <div class="keyRow">
+            <span class="key">R</span><span class="keyDesc">Restart</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- CENTER GAME -->
+      <section class="gameArea">
+        <div class="stageWrap">
+          <div class="stageGlow"></div>
+
+          <!-- ✅ NEW: wrapper used for responsive canvas sizing -->
+          <div class="stage" id="stageContainer">
+
+            <!-- ✅ IMPORTANT: remove fixed width/height (JS will resize dynamically) -->
+            <canvas id="game"></canvas>
+
+            <!-- Overlay -->
+            <div id="overlay" class="overlay">
+              <div class="modal">
+                <h2 id="overlayTitle">Rocket Escape</h2>
+                <p id="overlayText">Press Start / Enter to play.</p>
+                <p class="miniNote">Move: ↑ ↓ / W S • Pause: Esc • Restart: R</p>
+                <p class="miniNote mobileNote">Mobile: Swipe OR use buttons below</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- side controls -->
-        <div class="side-controls">
-          <button id="restartBtn" class="btn primary small">Restart</button>
-          <button id="pauseBtn" class="btn small ghost">Pause</button>
+        <!-- ✅ NEW: Mobile Controls -->
+        <div class="mobileControls" aria-label="Mobile controls">
+          <button id="mobUp" class="mobBtn">▲</button>
+          <button id="mobDown" class="mobBtn">▼</button>
         </div>
+
       </section>
+
+      <!-- RIGHT PANEL -->
+      <aside class="panel right">
+        <div class="panelTitle">Assist</div>
+
+        <div class="tipCard">
+          <div class="tipTop">
+            <span class="dot"></span>
+            <span class="tipTitle">Live Tip</span>
+          </div>
+          <div class="tipText" id="tipText">Tip: Use small movements, not long holds.</div>
+        </div>
+
+        <div class="block">
+          <div class="blockHead">
+            <span>Powerups</span>
+            <span class="tag">Loot</span>
+          </div>
+
+          <div class="chipGrid">
+            <div class="chip">🛡 Shield</div>
+            <div class="chip">🐢 Slow</div>
+            <div class="chip">⚡ Nitro</div>
+            <div class="chip">🧲 Magnet</div>
+          </div>
+
+          <div class="muted">Spawn in safe gaps</div>
+        </div>
+
+        <div class="block">
+          <div class="blockHead">
+            <span>Achievements</span>
+            <span class="tag">Badges</span>
+          </div>
+          <div class="badgeRow">
+            <span class="badge" id="badge1">Rookie</span>
+            <span class="badge" id="badge2">Pilot</span>
+            <span class="badge" id="badge3">Legend</span>
+          </div>
+          <div class="muted">Unlock by beating highscores</div>
+        </div>
+
+        <div class="bossCard">
+          <div class="bossTitle">⚠ Boss Mode</div>
+          <div class="bossText">Gap shrinks temporarily. Keep steady control.</div>
+        </div>
+      </aside>
+
     </main>
+
   </div>
+
+  <!-- Drawer -->
+  <aside id="drawer" class="drawer hidden">
+    <div class="drawerHead">
+      <div>
+        <div class="drawerTitle">Game Menu</div>
+        <div class="drawerSub">Quick stats & controls</div>
+      </div>
+      <button id="drawerClose" class="iconBtn">✕</button>
+    </div>
+
+    <div class="drawerCard">
+      <div class="drawerCardTitle">📊 Stats</div>
+      <div class="drawerGrid">
+        <div class="dstat">
+          <div class="l">Last Score</div>
+          <div class="x" id="lastScore">0</div>
+        </div>
+        <div class="dstat">
+          <div class="l">Best Streak</div>
+          <div class="x" id="bestStreak">0</div>
+        </div>
+        <div class="dstat">
+          <div class="l">Sound</div>
+          <div class="x" id="soundState">ON</div>
+        </div>
+        <div class="dstat">
+          <div class="l">Difficulty</div>
+          <div class="x"><span>Dynamic</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="drawerCard">
+      <div class="drawerCardTitle">🎮 Controls</div>
+      <ul class="drawerList">
+        <li><b>Move:</b> ↑ ↓ or W S</li>
+        <li><b>Start:</b> Enter / Space</li>
+        <li><b>Pause:</b> Esc</li>
+        <li><b>Restart:</b> R</li>
+      </ul>
+      <ul class="drawerList">
+        <li><b>Mobile:</b> Swipe / ▲ ▼ buttons</li>
+      </ul>
+    </div>
+  </aside>
 
   <script src="/static/game.js"></script>
 </body>
 </html>
-
-
-
-
-
