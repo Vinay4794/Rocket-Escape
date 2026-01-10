@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <title>Rocket Escape</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+  <!-- Cream UI background -->
+  <div class="space">
+    <div class="stars"></div>
+    <div class="stars2"></div>
+    <div class="nebula"></div>
+    <div class="scanlines"></div>
+  </div>
+
+  <div class="app">
+    <!-- HUD -->
+    <header class="hudbar">
+      <div class="brand">
+        <h1 class="game-title">
+  🚀 Rocket Survival
+      </h1>
+
+        <div class="brand-sub">Survive • Collect Stars • Avoid Lasers</div>
+      </div>
+
+      <div class="hud">
+        <div class="hud-card">
+          <span class="k">Score</span>
+          <span id="score" class="v">0</span>
+        </div>
+
+        <div class="hud-card">
+          <span class="k">High</span>
+          <span id="highscore" class="v">0</span>
+        </div>
+
+        <div class="hud-card">
+          <span class="k">Lives</span>
+          <span id="lives" class="v">3</span>
+        </div>
+
+        <div class="hud-card danger">
+          <span class="k">Missed Stars</span>
+          <span id="missedOrbs" class="v">0/7</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Game -->
+    <main class="game-area">
+      <section class="stage">
+        <div class="stage-inner">
+          <canvas id="canvas" width="900" height="520"></canvas>
+
+          <div class="hint">
+            <b>Desktop:</b> ← → Move • Space Boost • P Pause
+          </div>
+
+          <!-- Overlay -->
+          <div class="overlay" id="overlay">
+            <div class="panel">
+              <div class="panel-title">Rocket Escape</div>
+              <div class="panel-sub">
+                Collect <b>Gold Stars</b> for score. Grab <b>Blue Stars</b> for +1 life.
+                Avoid meteors, debris, satellites & lasers.
+              </div>
+
+              <div class="panel-actions">
+                <button id="startBtn" class="btn primary">Start Game</button>
+                <button id="howBtn" class="btn ghost">How to Play</button>
+              </div>
+
+              <div class="badges">
+                <span class="badge">⭐ Gold Star: +25</span>
+                <span class="badge">🔷 Blue Star: +1 Life</span>
+                <span class="badge">☄️ Meteor: -1 Life</span>
+                <span class="badge">🛰️ Satellite: -1 Life</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="overlay hidden" id="how">
+            <div class="panel">
+              <div class="panel-title">How to Play</div>
+              <ul class="rules">
+                <li>Move left/right to dodge obstacles.</li>
+                <li>Gold Star gives score.</li>
+                <li>Blue Star gives +1 life (falls very fast).</li>
+                <li>Miss more than 7 gold stars => Lose.</li>
+            
+              </ul>
+              <div class="panel-actions">
+                <button id="closeHow" class="btn primary">Back</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="toast" id="toast">Paused</div>
+
+          <!-- Mobile controls -->
+          <div class="mobile-controls">
+            <div class="touch-pad" id="touchPad">
+              <div class="touch-dot" id="touchDot"></div>
+            </div>
+
+            <div class="touch-actions">
+              <button id="boostBtn" class="big-btn">BOOST</button>
+              <button id="pauseBtnMobile" class="mini-btn">PAUSE</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- side controls -->
+        <div class="side-controls">
+          <button id="restartBtn" class="btn primary small">Restart</button>
+          <button id="pauseBtn" class="btn small ghost">Pause</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/static/game.js"></script>
+</body>
+</html>
+
+
+
+
+
