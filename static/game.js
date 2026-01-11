@@ -135,7 +135,7 @@ let streak = 0;
 let bestStreak = parseInt(localStorage.getItem("rocket_best_streak") || "0", 10);
 
 // Inputs
-const keys = { up: false, down: false, left: false, right: false };
+const keys = { up: false, down: false };
 
 // Rocket
 const rocket = {
@@ -171,11 +171,6 @@ function clampRocketIntoView() {
   rocket.y = clamp(rocket.y, rocket.h / 2, H - rocket.h / 2);
 }
 
-// ✅ NEW: keep rocket in view (X axis)
-function clampRocketXIntoView() {
-  rocket.x = clamp(rocket.x, rocket.w / 2, W - rocket.w / 2);
-}
-
 // =====================
 // Responsive Canvas Resize
 // =====================
@@ -198,7 +193,6 @@ function resizeCanvasToStage() {
 
   // keep rocket in view
   clampRocketIntoView();
-  clampRocketXIntoView();
 
   // regen stars for new size
   initStars();
@@ -1007,19 +1001,10 @@ function drawInGameHUD() {
 }
 
 // =====================
-// Mobile Buttons (hold) ✅ LEFT/RIGHT smooth
+// Mobile Buttons (hold)
 // =====================
-let leftHeld = false;
-let rightHeld = false;
-
-let targetMoveX = 0;
-let smoothedMoveX = 0;
-let mobileVX = 0;
-
-const MOBILE_MAX_SPEED_X = 11.5;
-const MOBILE_INPUT_SMOOTH = 0.18;
-const MOBILE_ACCEL = 0.28;
-const MOBILE_FRICTION = 0.82;
+let upHeld = false;
+let downHeld = false;
 
 function bindHold(btn, setter) {
   if (!btn) return;
@@ -1034,10 +1019,8 @@ function bindHold(btn, setter) {
   btn.addEventListener("mouseleave", () => setter(false));
 }
 
-// ✅ Reuse your existing buttons:
-// mobUp = LEFT, mobDown = RIGHT
-bindHold(mobUp, v => leftHeld = v);
-bindHold(mobDown, v => rightHeld = v);
+bindHold(mobUp, v => upHeld = v);
+bindHold(mobDown, v => downHeld = v);
 
 // ✅ prevent canvas touch from triggering while pressing mobile buttons
 [mobUp, mobDown].forEach(btn => {
@@ -1048,23 +1031,14 @@ bindHold(mobDown, v => rightHeld = v);
 });
 
 function applyMobileMovement() {
-  if (leftHeld && !rightHeld) targetMoveX = -1;
-  else if (rightHeld && !leftHeld) targetMoveX = 1;
-  else targetMoveX = 0;
-
-  smoothedMoveX += (targetMoveX - smoothedMoveX) * MOBILE_INPUT_SMOOTH;
-
-  const targetVX = smoothedMoveX * MOBILE_MAX_SPEED_X;
-  mobileVX += (targetVX - mobileVX) * MOBILE_ACCEL;
-
-  if (targetMoveX === 0) mobileVX *= MOBILE_FRICTION;
-
-  rocket.x += mobileVX;
-  clampRocketXIntoView();
+  const speed = 9.5;
+  if (upHeld) rocket.y -= speed;
+  if (downHeld) rocket.y += speed;
+  clampRocketIntoView();
 }
 
 // =====================
-// Touch Swipe Controls (mobile smooth) ✅ LEFT/RIGHT
+// Touch Swipe Controls (mobile smooth)
 // =====================
 let touchActive = false;
 
@@ -1079,8 +1053,6 @@ canvas.addEventListener("touchend", (e) => {
   touchActive = false;
   keys.up = false;
   keys.down = false;
-  keys.left = false;
-  keys.right = false;
   e.preventDefault();
 }, { passive: false });
 
@@ -1089,16 +1061,16 @@ canvas.addEventListener("touchmove", (e) => {
 
   const touch = e.touches[0];
   const rect = canvas.getBoundingClientRect();
-  const x = touch.clientX - rect.left;
+  const y = touch.clientY - rect.top;
 
-  // smooth follow (not snap)
-  rocket.x += (x - rocket.x) * 0.22;
+  rocket.y = y;
+  rocket.vy *= 0.55;
+  clampRocketIntoView();
 
-  clampRocketXIntoView();
   e.preventDefault();
 }, { passive: false });
 
-// Desktop pointer fallback (kept as your original vertical split)
+// Desktop pointer fallback
 canvas.addEventListener("pointerdown", (e) => {
   const rect = canvas.getBoundingClientRect();
   const y = e.clientY - rect.top;
@@ -1121,23 +1093,17 @@ function update() {
   updateBossEvent();
   updateActivePowerups();
 
-  // rocket physics (vertical)
+  // rocket physics
   if (keys.up) rocket.vy -= rocket.accel;
   if (keys.down) rocket.vy += rocket.accel;
 
   rocket.vy *= rocket.drag;
   rocket.y += rocket.vy;
 
-  // desktop horizontal (optional)
-  if (keys.left) rocket.x -= 6.5;
-  if (keys.right) rocket.x += 6.5;
-  clampRocketXIntoView();
-
   // mobile button movement (hold)
   applyMobileMovement();
 
   rocket.y = clamp(rocket.y, -40, H + 40);
-  clampRocketIntoView();
 
   spawnParticles();
   updateParticles();
@@ -1315,7 +1281,6 @@ function resetGame() {
   active.nitro = 0;
   active.magnet = 0;
 
-  rocket.x = 150;
   rocket.y = H / 2;
   rocket.vy = 0;
 
@@ -1350,9 +1315,6 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "ArrowUp" || k === "w") keys.up = true;
   if (e.key === "ArrowDown" || k === "s") keys.down = true;
 
-  if (e.key === "ArrowLeft" || k === "a") keys.left = true;
-  if (e.key === "ArrowRight" || k === "d") keys.right = true;
-
   // start
   if ((e.key === "Enter" || e.key === " ") && !state.running && !state.over) startGame();
 
@@ -1385,9 +1347,6 @@ document.addEventListener("keyup", (e) => {
   const k = e.key.toLowerCase();
   if (e.key === "ArrowUp" || k === "w") keys.up = false;
   if (e.key === "ArrowDown" || k === "s") keys.down = false;
-
-  if (e.key === "ArrowLeft" || k === "a") keys.left = false;
-  if (e.key === "ArrowRight" || k === "d") keys.right = false;
 });
 
 // Buttons
