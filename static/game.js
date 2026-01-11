@@ -210,34 +210,87 @@ window.addEventListener("orientationchange", resizeCanvasToStage);
 resizeCanvasToStage();
 
 // =====================
-// Fullscreen Support ✅
+// Fullscreen Support ✅ (Pro Mobile Version)
 // =====================
 function setFullscreenClass(on) {
   document.body.classList.toggle("fullscreen-game", on);
 }
 
+// optional helper (shows status text)
+function showStatusToast(msg) {
+  if (!statusEl) return;
+  statusEl.textContent = msg;
+  setTimeout(() => {
+    if (!state.over) statusEl.textContent = state.paused ? "Paused" : (state.running ? "Running" : "Ready");
+  }, 1500);
+}
+
+async function lockLandscapeIfPossible() {
+  // Works on supported mobile browsers only
+  try {
+    if (screen.orientation && screen.orientation.lock) {
+      await screen.orientation.lock("landscape");
+      return true;
+    }
+  } catch (e) {
+    // ignore (browser may block it)
+  }
+  return false;
+}
+
+async function unlockOrientationIfPossible() {
+  try {
+    if (screen.orientation && screen.orientation.unlock) {
+      screen.orientation.unlock();
+    }
+  } catch (e) {}
+}
+
 async function toggleFullscreen() {
   try {
+    // ENTER fullscreen
     if (!document.fullscreenElement) {
+      // Must be triggered by user gesture (button click)
       await stage.requestFullscreen();
+
       setFullscreenClass(true);
-    } else {
-      await document.exitFullscreen();
-      setFullscreenClass(false);
+
+      // try lock landscape
+      const locked = await lockLandscapeIfPossible();
+      if (locked) showStatusToast("Landscape Mode 🔁");
+      else showStatusToast("Fullscreen Enabled");
+
+      // sharp resize
+      setTimeout(() => resizeCanvasToStage(), 80);
+      return;
     }
+
+    // EXIT fullscreen
+    await document.exitFullscreen();
+    setFullscreenClass(false);
+
+    await unlockOrientationIfPossible();
+
+    setTimeout(() => resizeCanvasToStage(), 80);
   } catch (err) {
     console.log("Fullscreen error:", err);
+    showStatusToast("Fullscreen Blocked");
   }
 }
 
 fullscreenBtn?.addEventListener("click", toggleFullscreen);
 
 document.addEventListener("fullscreenchange", () => {
-  setFullscreenClass(!!document.fullscreenElement);
+  const isFS = !!document.fullscreenElement;
+  setFullscreenClass(isFS);
 
-  // resize after entering/exiting fullscreen for sharp rendering
-  setTimeout(() => resizeCanvasToStage(), 60);
+  // resize when browser changes fullscreen state
+  setTimeout(() => resizeCanvasToStage(), 80);
+
+  // if user exits fullscreen using gesture/back button
+  if (!isFS) unlockOrientationIfPossible();
 });
+
 
 // =====================
 // Drawer
