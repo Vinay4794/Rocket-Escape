@@ -758,3 +758,21 @@ body.fullscreen-game #game{
 body.fullscreen-game .gameRibbonBox{
   bottom: 18px !important;
 }
+/* ✅ Mobile safe fullscreen fit */
+body.fullscreen-game {
+  overflow: hidden !important;
+}
+
+body.fullscreen-game .bg {
+  display: none !important; /* optional: improves FPS */
+}
+
+body.fullscreen-game .stage {
+  background: #000 !important;
+}
+
+/* hide overlay blur lag in full screen (optional performance boost) */
+body.fullscreen-game .overlay {
+  backdrop-filter: none !important;
+}
+
