@@ -1,4 +1,9 @@
-*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,Segoe UI,Arial,sans-serif}
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:system-ui,Segoe UI,Arial,sans-serif;
+}
 
 /* =========================
    GLOBAL (Scrollable Mobile Fix)
@@ -23,7 +28,6 @@ html, body{
 canvas {
   touch-action: none;
 }
-
 
 /* =========================
    BACKGROUND (premium neon)
@@ -74,7 +78,10 @@ canvas {
   background-size:78px 78px;
   animation:gridmove 14s linear infinite;
 }
-@keyframes gridmove{from{transform:translateY(0)}to{transform:translateY(78px)}}
+@keyframes gridmove{
+  from{transform:translateY(0)}
+  to{transform:translateY(78px)}
+}
 
 /* =========================
    APP LAYOUT
@@ -87,7 +94,6 @@ canvas {
   grid-template-rows:auto 1fr;
   gap:12px;
 
-  /* ✅ allow page to expand + scroll naturally */
   height:auto;
   min-height:100vh;
 }
@@ -341,7 +347,11 @@ canvas {
   background: radial-gradient(900px 400px at 50% 0%, rgba(255,255,255,.12), transparent 60%);
 }
 
-canvas{width:100%;height:100%;display:block}
+canvas{
+  width:100%;
+  height:100%;
+  display:block;
+}
 
 /* overlay */
 .overlay{
@@ -445,12 +455,6 @@ canvas{width:100%;height:100%;display:block}
 .drawerList li{margin:7px 0}
 
 /* =========================
-   MOBILE CONTROLS (default hidden)
-========================= */
-.mobileControls{display:none}
-.mobBtn{border:none}
-
-/* =========================
    RESPONSIVE
 ========================= */
 @media (max-width: 1100px){
@@ -460,12 +464,10 @@ canvas{width:100%;height:100%;display:block}
 
 /* =========================
    MOBILE: LANDSCAPE GAME + SIDE CONTROLS
-   (Laptop unaffected)
 ========================= */
 @media (max-width: 768px){
 
   .brandText p{ display:none; }
-  .mobileNote{ display:block; }
 
   .app{
     padding: 10px 10px calc(14px + env(safe-area-inset-bottom));
@@ -474,7 +476,6 @@ canvas{width:100%;height:100%;display:block}
   .modeBox{ padding: 8px 10px; }
   .select{ width: 128px; padding: 9px 10px; }
 
-  /* Make game stage more "horizontal" */
   .stageWrap{
     height:auto;
     min-height:0;
@@ -485,45 +486,6 @@ canvas{width:100%;height:100%;display:block}
     min-height:320px;
     border-radius:26px;
   }
-
-  /* Put mobile controls ON TOP of canvas */
-  .mobileControls{
-    display:block;
-    position:absolute;
-    inset:0;
-    z-index:10;
-    padding:14px;
-    pointer-events:none;
-  }
-
-  /* Side buttons */
-  .mobBtn{
-    pointer-events:auto;
-    position:absolute;
-    top:50%;
-    transform:translateY(-50%);
-
-    width:78px;
-    height:78px;
-    border-radius:22px;
-
-    border: 1px solid rgba(255,255,255,0.16);
-    background: rgba(0,0,0,0.42);
-    backdrop-filter: blur(12px);
-
-    color:#fff;
-    font-size:30px;
-    font-weight:950;
-
-    box-shadow: 0 26px 80px rgba(0,0,0,0.55);
-  }
-
-  .mobBtn.left{ left:14px; }
-  .mobBtn.right{ right:14px; }
-
-  .mobBtn:active{
-    transform:translateY(-50%) scale(0.95);
-  }
 }
 
 /* Extra small phones */
@@ -531,15 +493,6 @@ canvas{width:100%;height:100%;display:block}
   .brandText h1{ font-size: 1.15rem; }
   .iconBtn{ width: 44px; height: 44px; }
   .ribbonBtn{ padding: 10px 12px; font-size: .88rem; }
-}
-
-@media (max-width: 420px){
-  .mobBtn{
-    width:68px;
-    height:68px;
-    border-radius:20px;
-    font-size:26px;
-  }
 }
 
 /* =========================
@@ -578,6 +531,7 @@ canvas{width:100%;height:100%;display:block}
     max-height: none;
   }
 }
+
 /* =========================
    IN-GAME RIBBON BOX
 ========================= */
@@ -643,8 +597,14 @@ canvas{width:100%;height:100%;display:block}
   .grTitle{ display:none; }
   .grBtn{ padding:10px 12px; }
 }
+
+/* =========================
+   PREMIUM MOBILE BUTTONS
+   (attached to stageContainer)
+========================= */
+
 /* Wrapper must be relative so buttons stick to it */
-#gameArea{
+#stageContainer{
   position: relative;
   width: 100%;
   height: 100%;
@@ -658,12 +618,10 @@ canvas{width:100%;height:100%;display:block}
   border-radius: 22px;
 }
 
-/* =========================
-   Premium Mobile Buttons
-   ========================= */
+/* Button base */
 .mobileBtn{
   position: absolute;
-  z-index: 999;
+  z-index: 9999;
 
   width: 74px;
   height: 74px;
@@ -739,4 +697,64 @@ canvas{width:100%;height:100%;display:block}
 @media (min-width: 900px){
   .mobileBtn{ display:none; }
 }
-canvas{ touch-action:none; }
+
+/* =========================
+   FULLSCREEN GAME MODE
+   (only game becomes fullscreen)
+========================= */
+body.fullscreen-game .topbar,
+body.fullscreen-game .panel.left,
+body.fullscreen-game .panel.right,
+body.fullscreen-game .drawer {
+  display: none !important;
+}
+
+body.fullscreen-game .app{
+  width: 100vw !important;
+  max-width: 100vw !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+body.fullscreen-game .layout{
+  display: block !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+body.fullscreen-game .gameArea{
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 99999 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+body.fullscreen-game .stageWrap{
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+}
+
+body.fullscreen-game .stage{
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  border-radius: 0 !important;
+  border: none !important;
+}
+
+body.fullscreen-game #game{
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 0 !important;
+}
+
+/* Ribbon stays visible */
+body.fullscreen-game .gameRibbonBox{
+  bottom: 18px !important;
+}
