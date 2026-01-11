@@ -561,7 +561,7 @@ function spawnObstacle() {
   const level = difficultyLevel();
 
   const baseGap = clamp(m.gapBase - level * 10, m.gapMin, m.gapBase);
-  const gap = clamp(baseGap - bossGapPenalty(), 90, 240);
+  const gap = clamp(baseGap - bossGapPenalty(), 120, 300);
 
   const topH = Math.floor(rr(52, H - gap - 52));
   const bottomY = topH + gap;
