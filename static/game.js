@@ -53,9 +53,9 @@ const mobDown = document.getElementById("mobDown");
 // =====================
 // Utils
 // =====================
-const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 const rr = (a, b) => a + Math.random() * (b - a);
-const rint = (a, b) => Math.floor(rr(a, b + 1));
+const rint = (a, b) => (a + Math.floor(Math.random() * (b - a + 1)));
 
 function showOverlay(title, text) {
   overlayTitle.textContent = title;
@@ -93,7 +93,7 @@ const state = {
   paused: false,
   over: false,
   score: 0,
-  best: parseInt(localStorage.getItem("rocket_best") || "0"),
+  best: parseInt(localStorage.getItem("rocket_best") || "0", 10),
   frame: 0,
 
   speed: 7.2,
@@ -106,7 +106,8 @@ const state = {
     active: false,
     timer: 0,
     durationFrames: 120,
-    cooldown: 0
+    cooldown: 0,
+    lastTriggerScore: -999999 // ✅ prevents accidental multi-trigger
   },
 
   coinsCollected: 0
@@ -117,7 +118,7 @@ highScoreTopEl.textContent = state.best;
 
 // streak
 let streak = 0;
-let bestStreak = parseInt(localStorage.getItem("rocket_best_streak") || "0");
+let bestStreak = parseInt(localStorage.getItem("rocket_best_streak") || "0", 10);
 
 // Inputs
 const keys = { up: false, down: false };
@@ -126,14 +127,16 @@ const keys = { up: false, down: false };
 const rocket = {
   x: 150,
   y: 200,
-  w: 54,
-  h: 24,
+  w: 42,        // reduced
+  h: 21,        // reduced
   vy: 0,
-
-  // faster movement
-  accel: 1.35,
-  drag: 0.82
+  accel: 1.45,
+  drag: 0.91
 };
+
+// ✅ Hitbox shrink (fair game feel)
+const HITBOX_PAD_X = 10;
+const HITBOX_PAD_Y = 6;
 
 // World objects
 let obstacles = [];
@@ -145,9 +148,13 @@ let powerups = [];
 // Active powerups
 const active = { shield: 0, slow: 0, nitro: 0, magnet: 0 };
 
+// Logical stage size (CSS pixels) ✅ (fix DPR issues cleanly)
+let W = 0;
+let H = 0;
+
 // Keep rocket in view (after resize / touch)
 function clampRocketIntoView() {
-  rocket.y = clamp(rocket.y, rocket.h / 2, canvas.height - rocket.h / 2);
+  rocket.y = clamp(rocket.y, rocket.h / 2, H - rocket.h / 2);
 }
 
 // =====================
@@ -159,8 +166,13 @@ function resizeCanvasToStage() {
   const rect = stage.getBoundingClientRect();
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-  canvas.width = Math.floor(rect.width * dpr);
-  canvas.height = Math.floor(rect.height * dpr);
+  // logical (CSS pixel size)
+  W = Math.max(1, rect.width);
+  H = Math.max(1, rect.height);
+
+  // physical size
+  canvas.width = Math.floor(W * dpr);
+  canvas.height = Math.floor(H * dpr);
 
   // draw in CSS pixels
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -256,7 +268,7 @@ function bossGapPenalty() {
 // =====================
 function effectiveSpeed() {
   let sp = state.speed;
-  if (active.slow > 0) sp *= 0.62;
+  if (active.slow > 0) sp *= 0.70;
   if (active.nitro > 0) sp *= 1.25;
   return sp;
 }
@@ -268,8 +280,8 @@ function initStars() {
   stars = [];
   for (let i = 0; i < 140; i++) {
     stars.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
+      x: Math.random() * W,
+      y: Math.random() * H,
       r: Math.random() * 2 + 0.4,
       layer: rint(1, 3)
     });
@@ -277,15 +289,15 @@ function initStars() {
 }
 
 function drawBackground() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, W, H);
 
   for (const s of stars) {
     const v = (1 + state.speed * 0.085) * (0.25 * s.layer);
     s.x -= v;
 
     if (s.x < -10) {
-      s.x = canvas.width + 10;
-      s.y = Math.random() * canvas.height;
+      s.x = W + 10;
+      s.y = Math.random() * H;
     }
 
     ctx.globalAlpha = 0.45 + s.layer * 0.15;
@@ -300,7 +312,7 @@ function drawBackground() {
     ctx.save();
     ctx.globalAlpha = 0.11;
     ctx.fillStyle = "rgba(255,60,120,1)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, W, H);
     ctx.restore();
   }
 }
@@ -345,56 +357,90 @@ function drawParticles() {
 // Rocket Draw
 // =====================
 function drawRocket() {
-  const tilt = clamp(rocket.vy * 0.085, -0.65, 0.65);
+  const tilt = clamp(rocket.vy * 0.09, -0.75, 0.75);
 
   ctx.save();
   ctx.translate(rocket.x, rocket.y);
   ctx.rotate(tilt);
 
-  // shield effect
+  // Core glow
+  ctx.save();
+  ctx.globalAlpha = 0.65;
+  ctx.shadowBlur = 30;
+  ctx.shadowColor = "rgba(35,210,255,0.55)";
+  ctx.beginPath();
+  ctx.ellipse(0, 0, rocket.w * 0.65, rocket.h * 0.85, 0, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(35,210,255,0.10)";
+  ctx.fill();
+  ctx.restore();
+
+  // Shield effect
   if (active.shield > 0) {
     ctx.save();
-    const pulse = 0.75 + Math.sin(state.frame * 0.18) * 0.2;
-    ctx.globalAlpha = 0.55;
-    ctx.shadowBlur = 24;
-    ctx.shadowColor = "rgba(35,210,255,0.65)";
+    const pulse = 0.65 + Math.sin(state.frame * 0.22) * 0.25;
+    ctx.globalAlpha = 0.7;
+
+    ctx.shadowBlur = 30;
+    ctx.shadowColor = "rgba(35,210,255,0.75)";
     ctx.beginPath();
-    ctx.arc(0, 0, 30, 0, Math.PI * 2);
+    ctx.arc(0, 0, 28 + pulse * 3, 0, Math.PI * 2);
     ctx.strokeStyle = `rgba(35,210,255,${pulse})`;
     ctx.lineWidth = 3;
     ctx.stroke();
+
     ctx.restore();
   }
 
+  // Body gradient
+  const bodyGrad = ctx.createLinearGradient(-rocket.w / 2, 0, rocket.w / 2, 0);
+  bodyGrad.addColorStop(0, "rgba(255,255,255,0.98)");
+  bodyGrad.addColorStop(0.6, "rgba(200,225,255,0.92)");
+  bodyGrad.addColorStop(1, "rgba(120,200,255,0.85)");
+
   ctx.shadowBlur = 18;
   ctx.shadowColor = "rgba(65,120,255,0.35)";
-
-  const grad = ctx.createLinearGradient(-rocket.w / 2, 0, rocket.w / 2, 0);
-  grad.addColorStop(0, "rgba(255,255,255,0.98)");
-  grad.addColorStop(1, "rgba(210,230,255,0.9)");
-
-  ctx.fillStyle = grad;
+  ctx.fillStyle = bodyGrad;
   ctx.beginPath();
-  ctx.roundRect(-rocket.w / 2, -rocket.h / 2, rocket.w, rocket.h, 12);
+  ctx.roundRect(-rocket.w / 2, -rocket.h / 2, rocket.w, rocket.h, 10);
   ctx.fill();
 
+  // Window
   ctx.shadowBlur = 0;
-  ctx.fillStyle = "rgba(20,30,50,0.85)";
   ctx.beginPath();
-  ctx.ellipse(6, -2, 12, 9, 0, 0, Math.PI * 2);
+  ctx.ellipse(rocket.w * 0.08, -1, rocket.w * 0.18, rocket.h * 0.32, 0, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(10,20,40,0.78)";
   ctx.fill();
 
-  const nose = ctx.createLinearGradient(rocket.w / 2, 0, rocket.w / 2 + 18, 0);
-  nose.addColorStop(0, "rgba(255,80,130,0.95)");
-  nose.addColorStop(1, "rgba(255,180,40,0.95)");
+  // Window highlight
+  ctx.beginPath();
+  ctx.ellipse(rocket.w * 0.12, -3, rocket.w * 0.08, rocket.h * 0.16, 0, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(255,255,255,0.25)";
+  ctx.fill();
 
-  ctx.fillStyle = nose;
+  // Nose cone
+  const noseGrad = ctx.createLinearGradient(rocket.w / 2, 0, rocket.w / 2 + 20, 0);
+  noseGrad.addColorStop(0, "rgba(255,80,140,0.95)");
+  noseGrad.addColorStop(1, "rgba(255,210,90,0.95)");
+
+  ctx.fillStyle = noseGrad;
   ctx.beginPath();
   ctx.moveTo(rocket.w / 2, -rocket.h / 2);
   ctx.lineTo(rocket.w / 2 + 18, 0);
   ctx.lineTo(rocket.w / 2, rocket.h / 2);
   ctx.closePath();
   ctx.fill();
+
+  // Tail fin
+  ctx.save();
+  ctx.globalAlpha = 0.85;
+  ctx.fillStyle = "rgba(65,120,255,0.85)";
+  ctx.beginPath();
+  ctx.moveTo(-rocket.w / 2 + 4, -rocket.h / 2);
+  ctx.lineTo(-rocket.w / 2 - 12, -rocket.h / 2 + 6);
+  ctx.lineTo(-rocket.w / 2 + 4, -rocket.h / 2 + 10);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
 
   ctx.restore();
 }
@@ -407,9 +453,9 @@ function spawnObstacle() {
   const level = difficultyLevel();
 
   const baseGap = clamp(m.gapBase - level * 10, m.gapMin, m.gapBase);
-  const gap = clamp(baseGap - bossGapPenalty(), 70, 240);
+  const gap = clamp(baseGap - bossGapPenalty(), 90, 240);
 
-  const topH = Math.floor(rr(52, canvas.height - gap - 52));
+  const topH = Math.floor(rr(52, H - gap - 52));
   const bottomY = topH + gap;
 
   const midChance = clamp(0.18 + level * 0.07, 0, 0.90);
@@ -441,7 +487,7 @@ function spawnObstacle() {
   if (Math.random() < spinnerChance) {
     const radius = clamp(18 + level * 2, 18, 34);
     spinner = {
-      cx: canvas.width + 80 + 38,
+      cx: W + 80 + 38,
       cy: rr(topH + radius + 18, bottomY - radius - 18),
       r: radius,
       angle: rr(0, Math.PI * 2),
@@ -450,7 +496,7 @@ function spawnObstacle() {
   }
 
   obstacles.push({
-    x: canvas.width + 80,
+    x: W + 80,
     w: 76,
     topH,
     bottomY,
@@ -504,15 +550,15 @@ function drawObstacle(o) {
   // walls
   ctx.fillStyle = g;
   ctx.fillRect(o.x, 0, o.w, o.topH);
-  ctx.fillRect(o.x, o.bottomY, o.w, canvas.height - o.bottomY);
+  ctx.fillRect(o.x, o.bottomY, o.w, H - o.bottomY);
 
   ctx.save();
-  ctx.shadowBlur = 20;
+  ctx.shadowBlur = 40;
   ctx.shadowColor = state.boss.active ? "rgba(255,70,140,0.55)" : "rgba(35,210,200,0.55)";
   ctx.strokeStyle = "rgba(255,255,255,0.18)";
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 1.3;
   ctx.strokeRect(o.x, 0, o.w, o.topH);
-  ctx.strokeRect(o.x, o.bottomY, o.w, canvas.height - o.bottomY);
+  ctx.strokeRect(o.x, o.bottomY, o.w, H - o.bottomY);
   ctx.restore();
 
   // mids
@@ -575,7 +621,7 @@ function spawnCoinOrPowerup(gapTop, gapBottom) {
   const coinChance = clamp(0.55 - level * 0.02, 0.25, 0.55);
   const powerChance = clamp(0.10 + level * 0.01, 0.10, 0.22);
 
-  const x = canvas.width + 90;
+  const x = W + 90;
   const y = rr(gapTop + 30, gapBottom - 30);
 
   if (Math.random() < powerChance) {
@@ -609,8 +655,8 @@ function updateCoinsAndPowerups() {
     if (active.magnet > 0) {
       const dx = rocket.x - c.x;
       const dy = rocket.y - c.y;
-      const d = Math.sqrt(dx * dx + dy * dy);
-      if (d < 220) {
+      const d2 = dx * dx + dy * dy;
+      if (d2 < 220 * 220) {
         c.x += dx * 0.03;
         c.y += dy * 0.03;
       }
@@ -626,8 +672,8 @@ function updateCoinsAndPowerups() {
     if (active.magnet > 0) {
       const dx = rocket.x - p.x;
       const dy = rocket.y - p.y;
-      const d = Math.sqrt(dx * dx + dy * dy);
-      if (d < 230) {
+      const d2 = dx * dx + dy * dy;
+      if (d2 < 230 * 230) {
         p.x += dx * 0.02;
         p.y += dy * 0.02;
       }
@@ -726,18 +772,21 @@ function updateActivePowerups() {
 // Collision + collectibles
 // =====================
 function rocketRect() {
+  const halfW = rocket.w / 2;
+  const halfH = rocket.h / 2;
+
   return {
-    l: rocket.x - rocket.w / 2,
-    r: rocket.x + rocket.w / 2,
-    t: rocket.y - rocket.h / 2,
-    b: rocket.y + rocket.h / 2
+    l: rocket.x - halfW + HITBOX_PAD_X,
+    r: rocket.x + halfW - HITBOX_PAD_X,
+    t: rocket.y - halfH + HITBOX_PAD_Y,
+    b: rocket.y + halfH - HITBOX_PAD_Y
   };
 }
 
 function checkHit() {
   const R = rocketRect();
 
-  if (R.t < 0 || R.b > canvas.height) return true;
+  if (R.t < 0 || R.b > H) return true;
 
   for (const o of obstacles) {
     const inX = R.r > o.x && R.l < o.x + o.w;
@@ -813,12 +862,19 @@ function checkCollectibles() {
 function updateBossEvent() {
   if (state.boss.cooldown > 0) state.boss.cooldown--;
 
-  const shouldTrigger = state.score > 0 && state.score % 500 < 2;
+  // ✅ lock boss trigger to exact 500 points, prevent double-fire
+  const shouldTrigger = (
+    state.score > 0 &&
+    state.score % 500 === 0 &&
+    state.score !== state.boss.lastTriggerScore
+  );
 
   if (!state.boss.active && state.boss.cooldown <= 0 && shouldTrigger) {
     state.boss.active = true;
     state.boss.timer = state.boss.durationFrames;
     state.boss.cooldown = 520;
+    state.boss.lastTriggerScore = state.score;
+
     statusEl.textContent = "BOSS MODE!";
     beep(880, 0.12, "sawtooth", 0.06);
     setTimeout(() => beep(660, 0.12, "triangle", 0.05), 80);
@@ -1025,7 +1081,7 @@ function update() {
   // mobile button movement (hold)
   applyMobileMovement();
 
-  rocket.y = clamp(rocket.y, -40, canvas.height + 40);
+  rocket.y = clamp(rocket.y, -40, H + 40);
 
   spawnParticles();
   updateParticles();
@@ -1127,13 +1183,13 @@ function render() {
 
   // vignette
   ctx.globalAlpha = 0.45;
-  const v = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  const v = ctx.createLinearGradient(0, 0, 0, H);
   v.addColorStop(0, "rgba(0,0,0,0.35)");
   v.addColorStop(0.3, "rgba(0,0,0,0)");
   v.addColorStop(0.7, "rgba(0,0,0,0)");
   v.addColorStop(1, "rgba(0,0,0,0.35)");
   ctx.fillStyle = v;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(0, 0, W, H);
   ctx.globalAlpha = 1;
 
   // boss warning
@@ -1193,13 +1249,14 @@ function resetGame() {
   state.boss.active = false;
   state.boss.timer = 0;
   state.boss.cooldown = 180;
+  state.boss.lastTriggerScore = -999999;
 
   active.shield = 0;
   active.slow = 0;
   active.nitro = 0;
   active.magnet = 0;
 
-  rocket.y = canvas.height / 2;
+  rocket.y = H / 2;
   rocket.vy = 0;
 
   obstacles = [];
@@ -1315,4 +1372,3 @@ document.querySelectorAll(".btn, .icon-btn").forEach(btn => {
 // =====================
 resetGame();
 loop();
-
