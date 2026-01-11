@@ -62,6 +62,13 @@ const mobDown = document.getElementById("mobDown");
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 const rr = (a, b) => a + Math.random() * (b - a);
 const rint = (a, b) => (a + Math.floor(Math.random() * (b - a + 1)));
+let touchTargetY = null;     // where finger wants rocket to go
+let lastTouchY = null;
+
+const TOUCH_SMOOTHING = 0.18;  // lower = smoother (0.10–0.25 best)
+const DEAD_ZONE = 6;           // px ignore micro movements
+const MAX_TOUCH_SPEED = 18;    // px per frame cap speed
+
 
 function showOverlay(title, text) {
   overlayTitle.textContent = title;
@@ -568,8 +575,14 @@ function drawObstacle(o) {
 
   ctx.save();
   ctx.shadowBlur = 40;
-  ctx.shadowColor = state.boss.active ? "rgba(255,70,140,0.55)" : "rgba(35,210,200,0.55)";
-  ctx.strokeStyle = "rgba(255,255,255,0.18)";
+  ctx.shadowColor = state.boss.active
+  ? "rgba(255,70,140,0.55)"   // boss pink
+  : "rgba(60,255,140,0.60)";    // normal green
+
+  ctx.strokeStyle = state.boss.active
+  ? "rgba(255,255,255,0.25)"
+  : "rgba(60,255,140,0.28)";
+
   ctx.lineWidth = 1.3;
   ctx.strokeRect(o.x, 0, o.w, o.topH);
   ctx.strokeRect(o.x, o.bottomY, o.w, H - o.bottomY);
@@ -1040,35 +1053,32 @@ function applyMobileMovement() {
 // =====================
 // Touch Swipe Controls (mobile smooth)
 // =====================
-let touchActive = false;
-
 canvas.addEventListener("touchstart", (e) => {
-  touchActive = true;
-  ensureAudio();
-  audioCtx?.resume?.();
   e.preventDefault();
-}, { passive: false });
+  const rect = canvas.getBoundingClientRect();
+  const touchY = e.touches[0].clientY - rect.top;
 
-canvas.addEventListener("touchend", (e) => {
-  touchActive = false;
-  keys.up = false;
-  keys.down = false;
-  e.preventDefault();
+  touchTargetY = touchY;
+  lastTouchY = touchY;
 }, { passive: false });
 
 canvas.addEventListener("touchmove", (e) => {
-  if (!touchActive) return;
-
-  const touch = e.touches[0];
-  const rect = canvas.getBoundingClientRect();
-  const y = touch.clientY - rect.top;
-
-  rocket.y = y;
-  rocket.vy *= 0.55;
-  clampRocketIntoView();
-
   e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const touchY = e.touches[0].clientY - rect.top;
+
+  // Dead zone (ignore very tiny shakes)
+  if (lastTouchY !== null && Math.abs(touchY - lastTouchY) < DEAD_ZONE) return;
+
+  touchTargetY = touchY;
+  lastTouchY = touchY;
 }, { passive: false });
+
+canvas.addEventListener("touchend", () => {
+  touchTargetY = null;
+  lastTouchY = null;
+});
+
 
 // Desktop pointer fallback
 canvas.addEventListener("pointerdown", (e) => {
@@ -1099,6 +1109,19 @@ function update() {
 
   rocket.vy *= rocket.drag;
   rocket.y += rocket.vy;
+
+  if (touchTargetY !== null) {
+  const desiredY = touchTargetY - rocket.h / 2; // center rocket on finger
+
+  let diff = desiredY - rocket.y;
+
+  // speed cap (prevents too fast jump)
+  diff = Math.max(-MAX_TOUCH_SPEED, Math.min(MAX_TOUCH_SPEED, diff));
+
+  // smoothing (rocket slowly goes to finger)
+  rocket.y += diff * TOUCH_SMOOTHING;
+}
+
 
   // mobile button movement (hold)
   applyMobileMovement();
