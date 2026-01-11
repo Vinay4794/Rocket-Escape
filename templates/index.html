@@ -30,27 +30,28 @@
       </div>
 
       <div class="topRight">
+        <div class="modeBox">
+          <div class="modeLabel">Mode</div>
+          <select id="modeSelect" class="select">
+            <option value="easy">Easy</option>
+            <option value="medium" selected>Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+        </div>
 
-  <div class="modeBox">
-    <div class="modeLabel">Mode</div>
-    <select id="modeSelect" class="select">
-      <option value="easy">Easy</option>
-      <option value="medium" selected>Medium</option>
-      <option value="hard">Hard</option>
-    </select>
-  </div>
+        <!-- ✅ Controls ribbon -->
+        <div class="ribbonControls">
+          <button id="soundBtn" class="ribbonBtn" title="Sound">🔊</button>
+          <button id="startBtn" class="ribbonBtn primary" title="Start">Start</button>
+          <button id="pauseBtn" class="ribbonBtn" title="Pause">Pause</button>
+          <button id="restartBtn" class="ribbonBtn" title="Restart">↻</button>
 
-  <!-- ✅ NEW: Controls ribbon in Title bar -->
-  <div class="ribbonControls">
-    <button id="soundBtn" class="ribbonBtn" title="Sound">🔊</button>
-    <button id="startBtn" class="ribbonBtn primary" title="Start">Start</button>
-    <button id="pauseBtn" class="ribbonBtn" title="Pause">Pause</button>
-    <button id="restartBtn" class="ribbonBtn" title="Restart">↻</button>
-  </div>
+          <!-- ✅ NEW Fullscreen Button -->
+          <button id="fullscreenBtn" class="ribbonBtn" title="Fullscreen">⛶</button>
+        </div>
 
-  <button id="drawerBtn" class="iconBtn" title="Menu">☰</button>
-</div>
-
+        <button id="drawerBtn" class="iconBtn" title="Menu">☰</button>
+      </div>
     </header>
 
     <!-- MAIN LAYOUT -->
@@ -116,20 +117,25 @@
         <div class="stageWrap">
           <div class="stageGlow"></div>
 
-          <!-- ✅ NEW: wrapper used for responsive canvas sizing -->
+          <!-- ✅ SINGLE correct game container -->
           <div class="stage" id="stageContainer">
 
-            <!-- ✅ IMPORTANT: remove fixed width/height (JS will resize dynamically) -->
+            <!-- ✅ ONLY ONE CANVAS -->
             <canvas id="game"></canvas>
-             <!-- ✅ In-Game Ribbon Box -->
-           <div id="gameRibbonBox" class="gameRibbonBox">
-           <div class="grTitle">Quick Controls</div>
-            <div class="grBtns">
-             <button id="grStart" class="grBtn primary">Start</button>
-              <button id="grRestart" class="grBtn">Restart</button>
-               <button id="grSound" class="grBtn">🔊</button>
-               </div>
+
+            <!-- ✅ Mobile Controls INSIDE game window -->
+            <button id="btnUp" class="mobileBtn upBtn"><span>▲</span></button>
+            <button id="btnDown" class="mobileBtn downBtn"><span>▼</span></button>
+
+            <!-- ✅ In-Game Ribbon Box -->
+            <div id="gameRibbonBox" class="gameRibbonBox">
+              <div class="grTitle">Quick Controls</div>
+              <div class="grBtns">
+                <button id="grStart" class="grBtn primary">Start</button>
+                <button id="grRestart" class="grBtn">Restart</button>
+                <button id="grSound" class="grBtn">🔊</button>
               </div>
+            </div>
 
             <!-- Overlay -->
             <div id="overlay" class="overlay">
@@ -137,24 +143,12 @@
                 <h2 id="overlayTitle">Rocket Escape</h2>
                 <p id="overlayText">Press Start / Enter to play.</p>
                 <p class="miniNote">Move: ↑ ↓ / W S • Pause: Esc • Restart: R</p>
-                <p class="miniNote mobileNote">Mobile: Swipe OR use buttons below</p>
+                <p class="miniNote mobileNote">Mobile: Swipe OR use ▲ ▼ buttons</p>
               </div>
             </div>
+
           </div>
         </div>
-
-        <!-- ✅ NEW: Mobile Controls -->
-       <!-- ✅ Mobile Controls (Landscape optimized) -->
-       <div id="gameArea">
-  <canvas id="game"></canvas>
-
-  <!-- Mobile Controls -->
-  <button id="btnUp" class="mobileBtn upBtn">●</button>
-  <button id="btnDown" class="mobileBtn downBtn">●</button>
-</div>
-
-
-
       </section>
 
       <!-- RIGHT PANEL -->
