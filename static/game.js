@@ -56,6 +56,18 @@ const drawerClose = document.getElementById("drawerClose");
 // ✅ Mobile controls (correct ids)
 const mobUp = document.getElementById("btnUp");
 const mobDown = document.getElementById("btnDown");
+let hasStartedOnce = false; // ✅ Start button only for first time
+function updateStartRestartUI() {
+  if (!startBtn || !restartBtn) return;
+
+  if (!hasStartedOnce) {
+    startBtn.style.display = "inline-flex";
+    restartBtn.style.display = "none";
+  } else {
+    startBtn.style.display = "none";
+    restartBtn.style.display = "inline-flex";
+  }
+}
 
 // =====================
 // Utils
@@ -1393,6 +1405,9 @@ function loop() {
 function startGame() {
   ensureAudio();
   audioCtx?.resume?.();
+  hasStartedOnce = true;
+  updateStartRestartUI();
+
 
   state.running = true;
   state.paused = false;
@@ -1449,6 +1464,7 @@ function resetGame() {
   lastScoreEl.textContent = "0";
   bestStreakEl.textContent = bestStreak;
   soundStateEl.textContent = audioOn ? "ON" : "OFF";
+  updateStartRestartUI();
 
   updateBadges();
   updateDifficultyUI();
@@ -1528,8 +1544,23 @@ soundBtn.onclick = () => {
 };
 
 // ✅ In-game ribbon box buttons mapped to existing buttons
-if (grStart) grStart.onclick = () => startBtn.click();
-if (grRestart) grRestart.onclick = () => restartBtn.click();
+// ✅ In-game ribbon box buttons mapped (Start only once)
+if (grStart) {
+  grStart.onclick = () => {
+    if (hasStartedOnce) return; // ✅ Start only first time
+    startGame();
+  };
+}
+
+if (grRestart) {
+  grRestart.onclick = () => {
+    resetGame();
+    startGame();
+  };
+}
+
+if (grSound) grSound.onclick = () => soundBtn.click();
+
 if (grSound) grSound.onclick = () => soundBtn.click();
 
 // Mode change
@@ -1541,5 +1572,6 @@ modeSelect.addEventListener("change", () => {
 // Boot
 // =====================
 resetGame();
+updateStartRestartUI();
 loop();
 
