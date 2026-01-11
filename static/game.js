@@ -56,6 +56,10 @@ const drawerClose = document.getElementById("drawerClose");
 // ✅ Mobile controls (correct ids)
 const mobUp = document.getElementById("btnUp");
 const mobDown = document.getElementById("btnDown");
+
+// =====================
+// Start button only once ✅
+// =====================
 let hasStartedOnce = false; // ✅ Start button only for first time
 function updateStartRestartUI() {
   if (!startBtn || !restartBtn) return;
@@ -67,6 +71,17 @@ function updateStartRestartUI() {
     startBtn.style.display = "none";
     restartBtn.style.display = "inline-flex";
   }
+
+  // optional: if ribbon buttons exist, toggle them too
+  if (grStart && grRestart) {
+    if (!hasStartedOnce) {
+      grStart.style.display = "inline-flex";
+      grRestart.style.display = "none";
+    } else {
+      grStart.style.display = "none";
+      grRestart.style.display = "inline-flex";
+    }
+  }
 }
 
 // =====================
@@ -74,7 +89,7 @@ function updateStartRestartUI() {
 // =====================
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 const rr = (a, b) => a + Math.random() * (b - a);
-const rint = (a, b) => (a + Math.floor(Math.random() * (b - a + 1)));
+const rint = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 
 let touchTargetY = null; // where finger wants rocket to go
 let lastTouchY = null;
@@ -186,6 +201,16 @@ const active = { shield: 0, slow: 0, nitro: 0, magnet: 0 };
 let W = 0;
 let H = 0;
 
+// =====================
+// Fullscreen fairness scaling ✅ (NEW)
+// =====================
+const BASE_STAGE_W = 980; // reference width
+let WIDTH_SCALE = 1;
+
+function computeWidthScale() {
+  WIDTH_SCALE = clamp(W / BASE_STAGE_W, 0.85, 1.55);
+}
+
 function clampRocketIntoView() {
   rocket.y = clamp(rocket.y, rocket.h / 2, H - rocket.h / 2);
 }
@@ -213,6 +238,9 @@ function resizeCanvasToStage() {
   // keep rocket in view
   clampRocketIntoView();
 
+  // ✅ compute width scaling for fullscreen fairness
+  computeWidthScale();
+
   // regen stars for new size
   initStars();
 }
@@ -233,56 +261,43 @@ function showStatusToast(msg) {
   if (!statusEl) return;
   statusEl.textContent = msg;
   setTimeout(() => {
-    if (!state.over) statusEl.textContent = state.paused ? "Paused" : (state.running ? "Running" : "Ready");
+    if (!state.over) statusEl.textContent = state.paused ? "Paused" : state.running ? "Running" : "Ready";
   }, 1500);
 }
 
 async function lockLandscapeIfPossible() {
-  // Works on supported mobile browsers only
   try {
     if (screen.orientation && screen.orientation.lock) {
       await screen.orientation.lock("landscape");
       return true;
     }
-  } catch (e) {
-    // ignore (browser may block it)
-  }
+  } catch (e) {}
   return false;
 }
 
 async function unlockOrientationIfPossible() {
   try {
-    if (screen.orientation && screen.orientation.unlock) {
-      screen.orientation.unlock();
-    }
+    if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
   } catch (e) {}
 }
 
 async function toggleFullscreen() {
   try {
-    // ENTER fullscreen
     if (!document.fullscreenElement) {
-      // Must be triggered by user gesture (button click)
       await stage.requestFullscreen();
-
       setFullscreenClass(true);
 
-      // try lock landscape
       const locked = await lockLandscapeIfPossible();
       if (locked) showStatusToast("Landscape Mode 🔁");
       else showStatusToast("Fullscreen Enabled");
 
-      // sharp resize
       setTimeout(() => resizeCanvasToStage(), 80);
       return;
     }
 
-    // EXIT fullscreen
     await document.exitFullscreen();
     setFullscreenClass(false);
-
     await unlockOrientationIfPossible();
-
     setTimeout(() => resizeCanvasToStage(), 80);
   } catch (err) {
     console.log("Fullscreen error:", err);
@@ -296,10 +311,7 @@ document.addEventListener("fullscreenchange", () => {
   const isFS = !!document.fullscreenElement;
   setFullscreenClass(isFS);
 
-  // resize when browser changes fullscreen state
   setTimeout(() => resizeCanvasToStage(), 80);
-
-  // if user exits fullscreen using gesture/back button
   if (!isFS) unlockOrientationIfPossible();
 });
 
@@ -572,7 +584,10 @@ function spawnObstacle() {
   const level = difficultyLevel();
 
   const baseGap = clamp(m.gapBase - level * 10, m.gapMin, m.gapBase);
-  const gap = clamp(baseGap - bossGapPenalty(), 120, 300);
+
+  // ✅ small fullscreen fairness boost (optional + safe)
+  const gapBoost = Math.floor((WIDTH_SCALE - 1) * 18); // fullscreen gap slightly bigger
+  const gap = clamp(baseGap + gapBoost - bossGapPenalty(), 120, 320);
 
   const topH = Math.floor(rr(52, H - gap - 52));
   const bottomY = topH + gap;
@@ -736,7 +751,6 @@ function drawObstacle(o) {
     ctx.restore();
   }
 }
-
 // =====================
 // Coins + Powerups
 // =====================
@@ -951,7 +965,6 @@ function checkHit() {
       if (dx * dx + dy * dy <= rad * rad) return true;
     }
   }
-
   return false;
 }
 
@@ -1166,17 +1179,13 @@ bindHold(mobDown, (v) => (downHeld = v));
   btn.addEventListener("touchend", (e) => e.stopPropagation(), { passive: false });
 });
 
-
 // ✅✅ REALLY SMOOTH BUTTON MOVEMENT (NEW)
-// This removes sensitivity & sudden movement.
-let btnVel = 0;                 // current smooth velocity from buttons
-const BTN_MAX_SPEED = 3.6;      // ✅ slow speed (lower = slower)
-const BTN_ACCEL = 0.16;         // ✅ super smooth acceleration
-const BTN_FRICTION = 0.88;      // ✅ smooth stop when released
+let btnVel = 0;
+const BTN_MAX_SPEED = 3.6;
+const BTN_ACCEL = 0.16;
+const BTN_FRICTION = 0.88;
 
 function applyMobileMovement() {
-  // if swipe is active, ignore button vel so it doesn't fight
-  // (you can remove this if you want both simultaneously)
   if (touchTargetY !== null) {
     btnVel *= BTN_FRICTION;
     return;
@@ -1186,10 +1195,8 @@ function applyMobileMovement() {
   if (upHeld) target = -BTN_MAX_SPEED;
   if (downHeld) target = BTN_MAX_SPEED;
 
-  // smooth accelerate towards target
   btnVel += (target - btnVel) * BTN_ACCEL;
 
-  // if no button pressed, smoothly slow down
   if (!upHeld && !downHeld) {
     btnVel *= BTN_FRICTION;
     if (Math.abs(btnVel) < 0.02) btnVel = 0;
@@ -1235,11 +1242,6 @@ canvas.addEventListener("touchend", () => {
   lastTouchY = null;
 });
 
-
-// ❌ REMOVED: Desktop pointer fallback that was controlling half screen
-// (this caused upper half = up, lower half = down)
-
-
 // =====================
 // Update loop
 // =====================
@@ -1275,18 +1277,29 @@ function update() {
   spawnParticles();
   updateParticles();
 
-  // spawn obstacles
+  // =====================
+  // spawn obstacles ✅ (fullscreen FIX)
+  // =====================
   state.spawnTimer++;
-  if (state.spawnTimer > state.spawnEvery) {
+
+  // fullscreen wider => obstacles spawn slower
+  const spawnFactor = clamp(1 + (WIDTH_SCALE - 1) * 0.75, 1, 1.6);
+  const dynamicSpawnEvery = Math.floor(state.spawnEvery * spawnFactor);
+
+  if (state.spawnTimer > dynamicSpawnEvery) {
     state.spawnTimer = 0;
     spawnObstacle();
 
-    // scaling
-    state.spawnEvery = clamp(state.spawnEvery - 0.78, state.spawnMin, 999);
+    // scaling (tightening slower in fullscreen)
+    const tightenRate = 0.78 / spawnFactor;
+    state.spawnEvery = clamp(state.spawnEvery - tightenRate, state.spawnMin, 999);
 
     const m = currentMode();
     if (state.speed < m.speedBase) state.speed = m.speedBase;
-    state.speed = clamp(state.speed + 0.065, m.speedBase, m.speedMax);
+
+    // speed grows slightly slower in fullscreen
+    const speedGain = 0.065 / spawnFactor;
+    state.speed = clamp(state.speed + speedGain, m.speedBase, m.speedMax);
 
     beep(660, 0.03, "sine", 0.015);
   }
@@ -1349,11 +1362,7 @@ function update() {
       updateBadges();
     }
 
-    showOverlay(
-      "💥 Game Over",
-      `Score: ${state.score} • Coins: ${state.coinsCollected}\nPress Enter / Restart`
-    );
-
+    showOverlay("💥 Game Over", `Score: ${state.score} • Coins: ${state.coinsCollected}\nPress Enter / Restart`);
     showGameRibbonBox();
   }
 }
@@ -1380,7 +1389,6 @@ function render() {
   ctx.fillRect(0, 0, W, H);
   ctx.globalAlpha = 1;
 
-  // boss warning
   if (state.boss.active) {
     ctx.save();
     ctx.globalAlpha = 0.88;
@@ -1405,9 +1413,9 @@ function loop() {
 function startGame() {
   ensureAudio();
   audioCtx?.resume?.();
+
   hasStartedOnce = true;
   updateStartRestartUI();
-
 
   state.running = true;
   state.paused = false;
@@ -1464,8 +1472,8 @@ function resetGame() {
   lastScoreEl.textContent = "0";
   bestStreakEl.textContent = bestStreak;
   soundStateEl.textContent = audioOn ? "ON" : "OFF";
-  updateStartRestartUI();
 
+  updateStartRestartUI();
   updateBadges();
   updateDifficultyUI();
 
@@ -1515,7 +1523,8 @@ document.addEventListener("keyup", (e) => {
 
 // Buttons
 startBtn.onclick = () => {
-  if (!state.running) startGame();
+  if (hasStartedOnce) return; // ✅ start only once
+  startGame();
 };
 
 pauseBtn.onclick = () => {
@@ -1543,11 +1552,10 @@ soundBtn.onclick = () => {
   else startMusic();
 };
 
-// ✅ In-game ribbon box buttons mapped to existing buttons
 // ✅ In-game ribbon box buttons mapped (Start only once)
 if (grStart) {
   grStart.onclick = () => {
-    if (hasStartedOnce) return; // ✅ Start only first time
+    if (hasStartedOnce) return;
     startGame();
   };
 }
@@ -1558,8 +1566,6 @@ if (grRestart) {
     startGame();
   };
 }
-
-if (grSound) grSound.onclick = () => soundBtn.click();
 
 if (grSound) grSound.onclick = () => soundBtn.click();
 
@@ -1574,4 +1580,3 @@ modeSelect.addEventListener("change", () => {
 resetGame();
 updateStartRestartUI();
 loop();
-
