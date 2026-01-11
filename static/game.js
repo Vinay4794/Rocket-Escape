@@ -33,6 +33,12 @@ const pauseBtn = document.getElementById("pauseBtn");
 const restartBtn = document.getElementById("restartBtn");
 const soundBtn = document.getElementById("soundBtn");
 
+// ✅ In-game ribbon box controls
+const gameRibbonBox = document.getElementById("gameRibbonBox");
+const grStart = document.getElementById("grStart");
+const grRestart = document.getElementById("grRestart");
+const grSound = document.getElementById("grSound");
+
 // Overlay
 const overlay = document.getElementById("overlay");
 const overlayTitle = document.getElementById("overlayTitle");
@@ -64,6 +70,14 @@ function showOverlay(title, text) {
 }
 function hideOverlay() {
   overlay.classList.add("hidden");
+}
+
+// ✅ In-game Ribbon show/hide
+function showGameRibbonBox() {
+  gameRibbonBox?.classList.remove("hidden");
+}
+function hideGameRibbonBox() {
+  gameRibbonBox?.classList.add("hidden");
 }
 
 function updateBadges() {
@@ -1008,6 +1022,14 @@ function bindHold(btn, setter) {
 bindHold(mobUp, v => upHeld = v);
 bindHold(mobDown, v => downHeld = v);
 
+// ✅ prevent canvas touch from triggering while pressing mobile buttons
+[mobUp, mobDown].forEach(btn => {
+  if (!btn) return;
+  btn.addEventListener("touchstart", (e) => e.stopPropagation(), { passive: false });
+  btn.addEventListener("touchmove", (e) => e.stopPropagation(), { passive: false });
+  btn.addEventListener("touchend", (e) => e.stopPropagation(), { passive: false });
+});
+
 function applyMobileMovement() {
   const speed = 9.5;
   if (upHeld) rocket.y -= speed;
@@ -1167,6 +1189,8 @@ function update() {
       "💥 Game Over",
       `Score: ${state.score} • Coins: ${state.coinsCollected}\nPress Enter / Restart`
     );
+
+    showGameRibbonBox(); // ✅ show ribbon after game over
   }
 }
 
@@ -1224,6 +1248,7 @@ function startGame() {
 
   statusEl.textContent = "Running";
   hideOverlay();
+  hideGameRibbonBox(); // ✅ hide ribbon once started
 
   beep(520, 0.07, "triangle", 0.06);
   startMusic();
@@ -1277,6 +1302,7 @@ function resetGame() {
   updateDifficultyUI();
 
   initStars();
+  showGameRibbonBox(); // ✅ show ribbon when ready
   showOverlay("Rocket Escape", "Press Start / Enter to play.");
 }
 
@@ -1351,6 +1377,11 @@ soundBtn.onclick = () => {
   if (!audioOn) stopMusic();
   else startMusic();
 };
+
+// ✅ In-game ribbon box buttons mapped to your existing buttons
+if (grStart) grStart.onclick = () => startBtn.click();
+if (grRestart) grRestart.onclick = () => restartBtn.click();
+if (grSound) grSound.onclick = () => soundBtn.click();
 
 // Mode change
 modeSelect.addEventListener("change", () => {
