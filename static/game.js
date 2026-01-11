@@ -291,7 +291,6 @@ document.addEventListener("fullscreenchange", () => {
   if (!isFS) unlockOrientationIfPossible();
 });
 
-
 // =====================
 // Drawer
 // =====================
@@ -1155,10 +1154,36 @@ bindHold(mobDown, (v) => (downHeld = v));
   btn.addEventListener("touchend", (e) => e.stopPropagation(), { passive: false });
 });
 
+
+// ✅✅ REALLY SMOOTH BUTTON MOVEMENT (NEW)
+// This removes sensitivity & sudden movement.
+let btnVel = 0;                 // current smooth velocity from buttons
+const BTN_MAX_SPEED = 3.6;      // ✅ slow speed (lower = slower)
+const BTN_ACCEL = 0.16;         // ✅ super smooth acceleration
+const BTN_FRICTION = 0.88;      // ✅ smooth stop when released
+
 function applyMobileMovement() {
-  const speed = 9.5;
-  if (upHeld) rocket.y -= speed;
-  if (downHeld) rocket.y += speed;
+  // if swipe is active, ignore button vel so it doesn't fight
+  // (you can remove this if you want both simultaneously)
+  if (touchTargetY !== null) {
+    btnVel *= BTN_FRICTION;
+    return;
+  }
+
+  let target = 0;
+  if (upHeld) target = -BTN_MAX_SPEED;
+  if (downHeld) target = BTN_MAX_SPEED;
+
+  // smooth accelerate towards target
+  btnVel += (target - btnVel) * BTN_ACCEL;
+
+  // if no button pressed, smoothly slow down
+  if (!upHeld && !downHeld) {
+    btnVel *= BTN_FRICTION;
+    if (Math.abs(btnVel) < 0.02) btnVel = 0;
+  }
+
+  rocket.y += btnVel;
   clampRocketIntoView();
 }
 
@@ -1198,17 +1223,10 @@ canvas.addEventListener("touchend", () => {
   lastTouchY = null;
 });
 
-// Desktop pointer fallback
-canvas.addEventListener("pointerdown", (e) => {
-  const rect = canvas.getBoundingClientRect();
-  const y = e.clientY - rect.top;
-  if (y < rect.height / 2) keys.up = true;
-  else keys.down = true;
-});
-canvas.addEventListener("pointerup", () => {
-  keys.up = false;
-  keys.down = false;
-});
+
+// ❌ REMOVED: Desktop pointer fallback that was controlling half screen
+// (this caused upper half = up, lower half = down)
+
 
 // =====================
 // Update loop
@@ -1237,7 +1255,7 @@ function update() {
     rocket.y += diff * TOUCH_SMOOTHING;
   }
 
-  // mobile button movement
+  // ✅ super smooth button movement
   applyMobileMovement();
 
   rocket.y = clamp(rocket.y, -40, H + 40);
@@ -1504,11 +1522,6 @@ restartBtn.onclick = () => {
 
 soundBtn.onclick = () => {
   audioOn = !audioOn;
-
-  // If your button is only icon, keep icon:
-  // Otherwise use the old text version if you want.
-  // soundBtn.textContent = audioOn ? "🔊 Sound: ON" : "🔇 Sound: OFF";
-
   soundStateEl.textContent = audioOn ? "ON" : "OFF";
   if (!audioOn) stopMusic();
   else startMusic();
@@ -1529,3 +1542,4 @@ modeSelect.addEventListener("change", () => {
 // =====================
 resetGame();
 loop();
+
