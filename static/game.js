@@ -1544,12 +1544,18 @@ restartBtn.onclick = () => {
   resetGame();
   startGame();
 };
-
+function updateSoundUI() {
+  if (soundBtn) soundBtn.textContent = audioOn ? "🔊" : "🔇";
+  if (grSound) grSound.textContent = audioOn ? "🔊" : "🔇"; // optional (if ribbon has icon)
+  if (soundStateEl) soundStateEl.textContent = audioOn ? "ON" : "OFF";
+}
 soundBtn.onclick = () => {
   audioOn = !audioOn;
-  soundStateEl.textContent = audioOn ? "ON" : "OFF";
+
   if (!audioOn) stopMusic();
   else startMusic();
+
+  updateSoundUI(); // ✅ THIS updates the 🔊 / 🔇 icon
 };
 
 // ✅ In-game ribbon box buttons mapped (Start only once)
@@ -1578,5 +1584,6 @@ modeSelect.addEventListener("change", () => {
 // Boot
 // =====================
 resetGame();
+updateSoundUI();
 updateStartRestartUI();
 loop();
