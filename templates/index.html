@@ -124,8 +124,14 @@
             <canvas id="game"></canvas>
 
             <!-- ✅ Mobile Controls INSIDE game window -->
-            <button id="btnUp" class="mobileBtn upBtn"><span>.</span></button>
-            <button id="btnDown" class="mobileBtn downBtn"><span>.</span></button>
+        <button id="btnUp" class="mobileBtn">
+  <span class="btnIcon">▲</span>
+</button>
+
+<button id="btnDown" class="mobileBtn">
+  <span class="btnIcon">▼</span>
+</button>
+
 
             <!-- ✅ In-Game Ribbon Box -->
             <div id="gameRibbonBox" class="gameRibbonBox">
@@ -143,7 +149,7 @@
                 <h2 id="overlayTitle">Rocket Escape</h2>
                 <p id="overlayText">Press Start / Enter to play.</p>
                 <p class="miniNote">Move: ↑ ↓ / W S • Pause: Esc • Restart: R</p>
-                <p class="miniNote mobileNote">Mobile: Swipe OR use . . buttons</p>
+                <p class="miniNote mobileNote">Mobile: Swipe OR use ▲ ▼ buttons</p>
               </div>
             </div>
 
@@ -243,7 +249,7 @@
         <li><b>Restart:</b> R</li>
       </ul>
       <ul class="drawerList">
-        <li><b>Mobile:</b> Swipe / . . buttons</li>
+        <li><b>Mobile:</b> Swipe / ▲ ▼ buttons</li>
       </ul>
     </div>
   </aside>
