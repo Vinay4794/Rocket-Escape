@@ -24,7 +24,10 @@ html, body{
    BACKGROUND (premium neon)
 ========================= */
 .bg{
-  position:fixed;inset:0;z-index:-1;overflow:hidden;
+  position:fixed;
+  inset:0;
+  z-index:-1;
+  overflow:hidden;
   background:
     radial-gradient(1200px 700px at 20% 10%, rgba(70,120,255,.18), transparent 55%),
     radial-gradient(900px 520px at 85% 20%, rgba(35,210,200,.14), transparent 55%),
@@ -43,18 +46,23 @@ html, body{
 .a1{width:700px;height:300px;left:-140px;top:120px;background:rgba(120,160,255,.33)}
 .a2{width:680px;height:320px;right:-220px;top:180px;background:rgba(35,210,200,.25);animation-delay:2s}
 .a3{width:740px;height:360px;left:35%;bottom:-260px;background:rgba(255,80,190,.20);animation-delay:4s}
+
 @keyframes aur{
   0%,100%{transform:translate(0,0) scale(1)}
   50%{transform:translate(24px,-24px) scale(1.05)}
 }
 
 .noise{
-  position:absolute;inset:0;opacity:.07;
+  position:absolute;
+  inset:0;
+  opacity:.07;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
 }
 
 .grid{
-  position:absolute;inset:0;opacity:.07;
+  position:absolute;
+  inset:0;
+  opacity:.07;
   background-image:
     linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
@@ -79,7 +87,9 @@ html, body{
   min-height:100vh;
 }
 
-/* topbar */
+/* =========================
+   TOPBAR
+========================= */
 .topbar{
   display:flex;
   justify-content:space-between;
@@ -110,7 +120,8 @@ html, body{
 
 /* Mode */
 .modeBox{
-  padding:10px 12px;border-radius:18px;
+  padding:10px 12px;
+  border-radius:18px;
   background: rgba(0,0,0,.20);
   border:1px solid rgba(255,255,255,.10);
 }
@@ -164,7 +175,7 @@ html, body{
   border-radius:18px;
   background: rgba(0,0,0,.18);
   border:1px solid rgba(255,255,255,.10);
-  flex-wrap:wrap; /* ✅ allow wrap on mobile */
+  flex-wrap:wrap;
 }
 
 .ribbonBtn{
@@ -181,7 +192,6 @@ html, body{
   line-height:1;
   white-space:nowrap;
 }
-
 .ribbonBtn:hover{ transform: translateY(-2px); }
 .ribbonBtn:active{ transform: translateY(0); }
 
@@ -211,7 +221,7 @@ html, body{
   backdrop-filter: blur(16px);
   box-shadow: 0 24px 85px rgba(0,0,0,.55);
   overflow:auto;
-  max-height: calc(100vh - 110px); /* ✅ prevents too tall panels */
+  max-height: calc(100vh - 110px);
 }
 
 .panelTitle{
@@ -259,7 +269,6 @@ html, body{
   border:1px solid rgba(255,255,255,.12);
   opacity:.9
 }
-
 .tag.hot{
   background: linear-gradient(135deg, rgba(255,80,190,.35), rgba(255,200,80,.10));
   border:1px solid rgba(255,255,255,.14)
@@ -305,12 +314,12 @@ html, body{
 
 .stageWrap{
   position:relative;
-  min-height:380px; /* ✅ keep usable stage on mobile */
+  min-height:380px;
 }
 
 .stage{
   position:relative;
-  height:65vh;              /* ✅ gives big game on mobile */
+  height:65vh;
   min-height:380px;
   border-radius:30px;
   overflow:hidden;
@@ -321,7 +330,8 @@ html, body{
 
 .stage::before{
   content:"";
-  position:absolute;inset:0;
+  position:absolute;
+  inset:0;
   pointer-events:none;
   background: radial-gradient(900px 400px at 50% 0%, rgba(255,255,255,.12), transparent 60%);
 }
@@ -330,12 +340,15 @@ canvas{width:100%;height:100%;display:block}
 
 /* overlay */
 .overlay{
-  position:absolute;inset:0;
-  display:grid;place-items:center;
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
   background: radial-gradient(720px 420px at 50% 45%, rgba(0,0,0,.08), rgba(0,0,0,.55));
   pointer-events:none;
 }
 .overlay.hidden{display:none}
+
 .modal{
   width:min(560px,94%);
   padding:22px;
@@ -350,7 +363,7 @@ canvas{width:100%;height:100%;display:block}
 .miniNote{margin-top:10px;font-size:.92rem;opacity:.7}
 
 /* =========================
-   RIGHT PANEL
+   RIGHT PANEL (cards)
 ========================= */
 .tipCard{
   padding:12px;
@@ -427,28 +440,10 @@ canvas{width:100%;height:100%;display:block}
 .drawerList li{margin:7px 0}
 
 /* =========================
-   MOBILE CONTROLS
+   MOBILE CONTROLS (default hidden)
 ========================= */
-.mobileControls{
-  display:none;
-  width:100%;
-  justify-content:center;
-  gap:16px;
-  padding: 12px 0 18px;
-}
-
-.mobBtn{
-  width:64px;
-  height:64px;
-  border-radius:18px;
-  border: 1px solid rgba(255,255,255,0.15);
-  background: rgba(0,0,0,0.45);
-  color: white;
-  font-size: 26px;
-  font-weight: 800;
-}
-
-.mobileNote{display:none}
+.mobileControls{display:none}
+.mobBtn{border:none}
 
 /* =========================
    RESPONSIVE
@@ -458,8 +453,12 @@ canvas{width:100%;height:100%;display:block}
   .panel{display:none}
 }
 
+/* =========================
+   MOBILE: LANDSCAPE GAME + SIDE CONTROLS
+   (Laptop unaffected)
+========================= */
 @media (max-width: 768px){
-  .mobileControls{ display:flex; }
+
   .brandText p{ display:none; }
   .mobileNote{ display:block; }
 
@@ -467,44 +466,98 @@ canvas{width:100%;height:100%;display:block}
     padding: 10px 10px calc(14px + env(safe-area-inset-bottom));
   }
 
-  .stage{
-    height: 70vh; /* ✅ big game area */
-  }
-
   .modeBox{ padding: 8px 10px; }
   .select{ width: 128px; padding: 9px 10px; }
+
+  /* Make game stage more "horizontal" */
+  .stageWrap{
+    height:auto;
+    min-height:0;
+  }
+
+  .stage{
+    height:62vh;
+    min-height:320px;
+    border-radius:26px;
+  }
+
+  /* Put mobile controls ON TOP of canvas */
+  .mobileControls{
+    display:block;
+    position:absolute;
+    inset:0;
+    z-index:10;
+    padding:14px;
+    pointer-events:none;
+  }
+
+  /* Side buttons */
+  .mobBtn{
+    pointer-events:auto;
+    position:absolute;
+    top:50%;
+    transform:translateY(-50%);
+
+    width:78px;
+    height:78px;
+    border-radius:22px;
+
+    border: 1px solid rgba(255,255,255,0.16);
+    background: rgba(0,0,0,0.42);
+    backdrop-filter: blur(12px);
+
+    color:#fff;
+    font-size:30px;
+    font-weight:950;
+
+    box-shadow: 0 26px 80px rgba(0,0,0,0.55);
+  }
+
+  .mobBtn.left{ left:14px; }
+  .mobBtn.right{ right:14px; }
+
+  .mobBtn:active{
+    transform:translateY(-50%) scale(0.95);
+  }
 }
 
+/* Extra small phones */
 @media (max-width: 520px){
   .brandText h1{ font-size: 1.15rem; }
   .iconBtn{ width: 44px; height: 44px; }
   .ribbonBtn{ padding: 10px 12px; font-size: .88rem; }
 }
+
+@media (max-width: 420px){
+  .mobBtn{
+    width:68px;
+    height:68px;
+    border-radius:20px;
+    font-size:26px;
+  }
+}
+
 /* =========================
    LAPTOP / DESKTOP: BIG FULL HEIGHT GAME
 ========================= */
 @media (min-width: 1101px){
 
-  /* app takes full viewport height */
   .app{
     min-height: 100vh;
     height: 100vh;
   }
 
-  /* layout fills remaining height under topbar */
   .layout{
     height: 100%;
     min-height: 0;
   }
 
-  /* center game fills the full available height */
   .gameArea{
     height: 100%;
     min-height: 0;
-    grid-template-rows: 1fr;   /* ✅ make stage take full space */
+    grid-template-rows: 1fr;
   }
 
-  /* make stage fill vertically */
   .stageWrap{
     height: 100%;
     min-height: 0;
@@ -515,7 +568,6 @@ canvas{width:100%;height:100%;display:block}
     min-height: 0;
   }
 
-  /* keep panels same full height */
   .panel{
     height: 100%;
     max-height: none;
