@@ -643,92 +643,100 @@ canvas{width:100%;height:100%;display:block}
   .grTitle{ display:none; }
   .grBtn{ padding:10px 12px; }
 }
+/* Wrapper must be relative so buttons stick to it */
+#gameArea{
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* Canvas full */
+#game{
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 22px;
+}
+
 /* =========================
-   Mobile Control Buttons
+   Premium Mobile Buttons
    ========================= */
-
-.mobileBtn {
+.mobileBtn{
   position: absolute;
-  z-index: 50;
+  z-index: 999;
 
-  width: 72px;
-  height: 72px;
-  border-radius: 18px;
+  width: 74px;
+  height: 74px;
+  border-radius: 20px;
 
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(15, 15, 18, 0.55);
+  border: 1px solid rgba(255,255,255,0.18);
+  background: linear-gradient(180deg,
+    rgba(255,255,255,0.12),
+    rgba(15,15,20,0.60)
+  );
 
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 
   box-shadow:
-    0 10px 22px rgba(0, 0, 0, 0.55),
-    inset 0 2px 8px rgba(255, 255, 255, 0.12);
+    0 18px 40px rgba(0,0,0,0.55),
+    inset 0 2px 10px rgba(255,255,255,0.10);
 
-  color: #fff;
+  color: white;
   font-size: 30px;
   font-weight: 900;
-  letter-spacing: 0.5px;
 
   display: flex;
   justify-content: center;
   align-items: center;
 
-  cursor: pointer;
   user-select: none;
+  cursor: pointer;
 
-  transition: transform 0.1s ease, box-shadow 0.2s ease, background 0.2s ease;
+  transition: transform 0.12s ease, box-shadow 0.25s ease, filter 0.25s ease;
   -webkit-tap-highlight-color: transparent;
   touch-action: none;
 }
 
-/* UP button: neon blue */
-.upBtn {
-  top: 12px;
-  right: 12px;
-
-  box-shadow:
-    0 10px 22px rgba(0, 0, 0, 0.55),
-    0 0 18px rgba(0, 200, 255, 0.35),
-    inset 0 2px 8px rgba(255, 255, 255, 0.12);
-}
-
-/* DOWN button: neon pink */
-.downBtn {
-  bottom: 12px;
-  left: 12px;
-
-  box-shadow:
-    0 10px 22px rgba(0, 0, 0, 0.55),
-    0 0 18px rgba(255, 0, 170, 0.35),
-    inset 0 2px 8px rgba(255, 255, 255, 0.12);
-}
-
-/* hover effect (desktop only) */
-@media (hover: hover) {
-  .mobileBtn:hover {
-    transform: translateY(-2px) scale(1.02);
-    background: rgba(20, 20, 25, 0.7);
-  }
-}
-
-/* ✅ Press / tap animation */
-.mobileBtn:active {
-  transform: translateY(2px) scale(0.96);
-  background: rgba(10, 10, 14, 0.85);
-  box-shadow:
-    0 6px 14px rgba(0, 0, 0, 0.55),
-    inset 0 2px 10px rgba(0, 0, 0, 0.35);
-}
-
-/* optional: icon style */
-.mobileBtn span {
+.mobileBtn span{
+  filter: drop-shadow(0 3px 10px rgba(0,0,0,0.6));
   transform: translateY(-1px);
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
-}
-#game {
-  width: 100%;
-  height: auto;
-  display: block;
 }
 
+/* ✅ UP button (Top Right) */
+.upBtn{
+  top: 14px;
+  right: 14px;
+
+  box-shadow:
+    0 18px 40px rgba(0,0,0,0.55),
+    0 0 18px rgba(0, 200, 255, 0.35),
+    inset 0 2px 10px rgba(255,255,255,0.10);
+}
+
+/* ✅ DOWN button (Bottom Left) */
+.downBtn{
+  bottom: 14px;
+  left: 14px;
+
+  box-shadow:
+    0 18px 40px rgba(0,0,0,0.55),
+    0 0 18px rgba(255, 0, 170, 0.35),
+    inset 0 2px 10px rgba(255,255,255,0.10);
+}
+
+/* ✅ Press Animation */
+.mobileBtn:active{
+  transform: scale(0.92);
+  filter: brightness(1.15);
+
+  box-shadow:
+    0 10px 22px rgba(0,0,0,0.6),
+    inset 0 3px 14px rgba(0,0,0,0.35);
+}
+
+/* Hide buttons on desktop */
+@media (min-width: 900px){
+  .mobileBtn{ display:none; }
+}
+canvas{ touch-action:none; }
