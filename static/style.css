@@ -775,4 +775,63 @@ body.fullscreen-game .stage {
 body.fullscreen-game .overlay {
   backdrop-filter: none !important;
 }
+/* ===========================
+   Mobile Buttons (Bottom + Arrows)
+   =========================== */
+
+/* Place both buttons at bottom */
+#btnUp, #btnDown {
+  position: absolute;
+  bottom: 14px;
+  z-index: 1000;
+  pointer-events: auto;
+}
+
+/* Left & right placement */
+#btnDown { left: 16px; }
+#btnUp   { right: 16px; }
+
+/* Premium game button look */
+.mobileBtn {
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  background: rgba(0, 0, 0, 0.55);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  box-shadow:
+    0 14px 30px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+
+  transition: transform 0.08s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.mobileBtn:active {
+  transform: scale(0.92);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.32);
+}
+
+/* Arrow icon styling */
+.mobileBtn .btnIcon {
+  font-size: 30px;
+  font-weight: 900;
+  color: #ffffff;
+  line-height: 1;
+
+  text-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.75);
+}
 
