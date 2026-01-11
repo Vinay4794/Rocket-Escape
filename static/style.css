@@ -1,26 +1,30 @@
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,Segoe UI,Arial,sans-serif}
 
-html,body{
+/* =========================
+   GLOBAL (Scrollable Mobile Fix)
+========================= */
+html, body{
   height:100%;
   margin:0;
-  overflow:hidden;
-}
-
-body{
+  overflow-x:hidden;
+  overflow-y:auto;          /* ✅ allow vertical scroll */
   color:#fff;
   background:#050513;
+  touch-action: pan-y;      /* ✅ allow vertical scrolling gesture */
   user-select:none;
   -webkit-user-select:none;
+}
+
+/* Keep GAME touch locked (so swipe/hold works perfectly) */
+#stageContainer, #game, canvas{
+  touch-action: none;       /* ✅ no scroll inside game area */
 }
 
 /* =========================
    BACKGROUND (premium neon)
 ========================= */
 .bg{
-  position:fixed;
-  inset:0;
-  z-index:-1;
-  overflow:hidden;
+  position:fixed;inset:0;z-index:-1;overflow:hidden;
   background:
     radial-gradient(1200px 700px at 20% 10%, rgba(70,120,255,.18), transparent 55%),
     radial-gradient(900px 520px at 85% 20%, rgba(35,210,200,.14), transparent 55%),
@@ -39,61 +43,53 @@ body{
 .a1{width:700px;height:300px;left:-140px;top:120px;background:rgba(120,160,255,.33)}
 .a2{width:680px;height:320px;right:-220px;top:180px;background:rgba(35,210,200,.25);animation-delay:2s}
 .a3{width:740px;height:360px;left:35%;bottom:-260px;background:rgba(255,80,190,.20);animation-delay:4s}
-
 @keyframes aur{
   0%,100%{transform:translate(0,0) scale(1)}
   50%{transform:translate(24px,-24px) scale(1.05)}
 }
 
 .noise{
-  position:absolute;
-  inset:0;
-  opacity:.07;
+  position:absolute;inset:0;opacity:.07;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
 }
 
 .grid{
-  position:absolute;
-  inset:0;
-  opacity:.07;
+  position:absolute;inset:0;opacity:.07;
   background-image:
     linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
   background-size:78px 78px;
   animation:gridmove 14s linear infinite;
 }
-
-@keyframes gridmove{
-  from{transform:translateY(0)}
-  to{transform:translateY(78px)}
-}
+@keyframes gridmove{from{transform:translateY(0)}to{transform:translateY(78px)}}
 
 /* =========================
    APP LAYOUT
 ========================= */
 .app{
-  height:100%;
   width:min(1600px, 98vw);
   margin:0 auto;
   padding:14px;
   display:grid;
   grid-template-rows:auto 1fr;
   gap:12px;
+
+  /* ✅ allow page to expand + scroll naturally */
+  height:auto;
+  min-height:100vh;
 }
 
-/* =========================
-   TOPBAR
-========================= */
+/* topbar */
 .topbar{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  padding:6px 10px;
+  padding: 6px 10px;
   border-radius:20px;
-  background:rgba(255,255,255,.05);
+  background: rgba(255,255,255,.05);
   border:1px solid rgba(255,255,255,.10);
   backdrop-filter: blur(16px);
-  box-shadow:0 18px 55px rgba(0,0,0,.55);
+  box-shadow: 0 18px 55px rgba(0,0,0,.55);
 }
 
 .brand{display:flex;align-items:center;gap:12px}
@@ -107,16 +103,15 @@ body{
   border:1px solid rgba(255,255,255,.10);
 }
 
-.brandText h1{font-size:1.45rem}
+.brandText h1{font-size:1.45rem;}
 .brandText p{font-size:.88rem;margin-top:1px;opacity:.8}
 
-.topRight{display:flex;align-items:center;gap:12px;min-width:0}
+.topRight{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 
-/* mode */
+/* Mode */
 .modeBox{
-  padding:10px 12px;
-  border-radius:18px;
-  background:rgba(0,0,0,.20);
+  padding:10px 12px;border-radius:18px;
+  background: rgba(0,0,0,.20);
   border:1px solid rgba(255,255,255,.10);
 }
 .modeLabel{opacity:.7;font-size:.86rem;margin-bottom:6px}
@@ -125,8 +120,8 @@ body{
   width:150px;
   border-radius:14px;
   padding:10px 12px;
-  background:rgba(0,0,0,.55);
-  border:1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.55);
+  border: 1px solid rgba(255,255,255,.14);
   color:#fff;
   font-weight:900;
   outline:none;
@@ -135,32 +130,23 @@ body{
     inset 0 1px 0 rgba(255,255,255,.08),
     0 10px 28px rgba(0,0,0,.35);
 }
-
 .select:hover{
-  background:rgba(0,0,0,.65);
-  border-color:rgba(255,255,255,.20);
+  background: rgba(0,0,0,.65);
+  border-color: rgba(255,255,255,.20);
 }
 .select:focus{
-  border-color:rgba(35,210,200,.55);
+  border-color: rgba(35,210,200,.55);
   box-shadow:
     0 0 0 4px rgba(35,210,200,.12),
     inset 0 1px 0 rgba(255,255,255,.08);
 }
-.select option{
-  background:#0b0f1d;
-  color:#fff;
-}
+.select option{background:#0b0f1d;color:#ffffff}
 
-/* icon button */
 .iconBtn{
-  width:48px;height:48px;
-  border-radius:18px;
-  border:none;
-  cursor:pointer;
-  color:#fff;
-  font-size:1.1rem;
-  font-weight:950;
-  background:rgba(255,255,255,.06);
+  width:48px;height:48px;border-radius:18px;
+  border:none;cursor:pointer;
+  color:#fff;font-size:1.1rem;font-weight:950;
+  background: rgba(255,255,255,.06);
   border:1px solid rgba(255,255,255,.12);
   transition:.16s ease;
 }
@@ -176,9 +162,9 @@ body{
   gap:10px;
   padding:10px;
   border-radius:18px;
-  background:rgba(0,0,0,.18);
+  background: rgba(0,0,0,.18);
   border:1px solid rgba(255,255,255,.10);
-  flex-wrap:nowrap;
+  flex-wrap:wrap; /* ✅ allow wrap on mobile */
 }
 
 .ribbonBtn{
@@ -189,44 +175,43 @@ body{
   font-weight:950;
   font-size:.95rem;
   color:#fff;
-  background:rgba(255,255,255,.06);
+  background: rgba(255,255,255,.06);
   border:1px solid rgba(255,255,255,.12);
   transition:.16s ease;
   line-height:1;
   white-space:nowrap;
 }
 
-.ribbonBtn:hover{transform:translateY(-2px)}
-.ribbonBtn:active{transform:translateY(0)}
+.ribbonBtn:hover{ transform: translateY(-2px); }
+.ribbonBtn:active{ transform: translateY(0); }
 
 .ribbonBtn.primary{
-  background:linear-gradient(135deg, #4b7bff, #23d2c8);
+  background: linear-gradient(135deg, #4b7bff, #23d2c8);
   color:#061018;
   border:none;
-  box-shadow:0 16px 40px rgba(35,210,200,.16);
+  box-shadow: 0 16px 40px rgba(35,210,200,.16);
 }
 
 /* =========================
    MAIN GRID: Left | Game | Right
 ========================= */
 .layout{
-  height:100%;
   display:grid;
-  grid-template-columns:260px 1fr 260px;
+  grid-template-columns: 260px 1fr 260px;
   gap:12px;
   min-height:0;
 }
 
 /* panels */
 .panel{
-  height:100%;
   padding:14px;
   border-radius:26px;
-  background:rgba(255,255,255,.05);
+  background: rgba(255,255,255,.05);
   border:1px solid rgba(255,255,255,.10);
   backdrop-filter: blur(16px);
-  box-shadow:0 24px 85px rgba(0,0,0,.55);
+  box-shadow: 0 24px 85px rgba(0,0,0,.55);
   overflow:auto;
+  max-height: calc(100vh - 110px); /* ✅ prevents too tall panels */
 }
 
 .panelTitle{
@@ -240,11 +225,15 @@ body{
 .panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:999px}
 
 /* left stats */
-.statGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.statGrid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
 .statCard{
   padding:12px;
   border-radius:20px;
-  background:rgba(0,0,0,.20);
+  background: rgba(0,0,0,.20);
   border:1px solid rgba(255,255,255,.10);
   transition:.16s ease;
 }
@@ -260,6 +249,7 @@ body{
   background:rgba(0,0,0,.18);
   border:1px solid rgba(255,255,255,.10);
 }
+
 .blockHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-weight:950}
 .tag{
   font-size:.85rem;
@@ -269,8 +259,9 @@ body{
   border:1px solid rgba(255,255,255,.12);
   opacity:.9
 }
+
 .tag.hot{
-  background:linear-gradient(135deg, rgba(255,80,190,.35), rgba(255,200,80,.10));
+  background: linear-gradient(135deg, rgba(255,80,190,.35), rgba(255,200,80,.10));
   border:1px solid rgba(255,255,255,.14)
 }
 
@@ -285,16 +276,17 @@ body{
   height:100%;
   width:12%;
   border-radius:999px;
-  background:linear-gradient(90deg, #4b7bff, #23d2c8);
+  background: linear-gradient(90deg, #4b7bff, #23d2c8);
   box-shadow:0 0 24px rgba(35,210,200,.25);
   transition:width .22s ease;
 }
+
 .muted{margin-top:8px;opacity:.7;font-size:.9rem}
 
 .keyRow{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
 .key{
   padding:8px 10px;border-radius:12px;
-  background:rgba(255,255,255,.06);
+  background: rgba(255,255,255,.06);
   border:1px solid rgba(255,255,255,.12);
   font-weight:950;
 }
@@ -304,55 +296,54 @@ body{
    GAME CENTER
 ========================= */
 .gameArea{
-  height:100%;
   min-width:0;
   display:grid;
-  grid-template-rows:1fr auto;
+  grid-template-rows: 1fr auto;
   gap:10px;
   min-height:0;
 }
 
-.stageWrap{position:relative;min-height:0;height:100%}
+.stageWrap{
+  position:relative;
+  min-height:380px; /* ✅ keep usable stage on mobile */
+}
 
 .stage{
   position:relative;
-  height:100%;
+  height:65vh;              /* ✅ gives big game on mobile */
+  min-height:380px;
   border-radius:30px;
   overflow:hidden;
-  background:rgba(0,0,0,.22);
+  background: rgba(0,0,0,.22);
   border:1px solid rgba(255,255,255,.12);
-  box-shadow:0 40px 120px rgba(0,0,0,.65);
+  box-shadow: 0 40px 120px rgba(0,0,0,.65);
 }
 
 .stage::before{
   content:"";
-  position:absolute;
-  inset:0;
+  position:absolute;inset:0;
   pointer-events:none;
-  background:radial-gradient(900px 400px at 50% 0%, rgba(255,255,255,.12), transparent 60%);
+  background: radial-gradient(900px 400px at 50% 0%, rgba(255,255,255,.12), transparent 60%);
 }
 
-canvas{width:100%;height:100%;display:block;touch-action:none}
+canvas{width:100%;height:100%;display:block}
 
 /* overlay */
 .overlay{
-  position:absolute;
-  inset:0;
-  display:grid;
-  place-items:center;
-  background:radial-gradient(720px 420px at 50% 45%, rgba(0,0,0,.08), rgba(0,0,0,.55));
+  position:absolute;inset:0;
+  display:grid;place-items:center;
+  background: radial-gradient(720px 420px at 50% 45%, rgba(0,0,0,.08), rgba(0,0,0,.55));
   pointer-events:none;
 }
 .overlay.hidden{display:none}
-
 .modal{
   width:min(560px,94%);
   padding:22px;
   border-radius:26px;
-  background:rgba(255,255,255,.06);
+  background: rgba(255,255,255,.06);
   border:1px solid rgba(255,255,255,.14);
   backdrop-filter: blur(18px);
-  box-shadow:0 28px 110px rgba(0,0,0,.72);
+  box-shadow: 0 28px 110px rgba(0,0,0,.72);
 }
 .modal h2{font-size:1.75rem;font-weight:950}
 .modal p{margin-top:8px;opacity:.85}
@@ -364,25 +355,20 @@ canvas{width:100%;height:100%;display:block;touch-action:none}
 .tipCard{
   padding:12px;
   border-radius:22px;
-  background:linear-gradient(135deg, rgba(35,210,200,.10), rgba(255,255,255,.03));
+  background: linear-gradient(135deg, rgba(35,210,200,.10), rgba(255,255,255,.03));
   border:1px solid rgba(255,255,255,.12);
   margin-bottom:12px;
 }
 
 .tipTop{display:flex;gap:10px;align-items:center;margin-bottom:10px}
-.dot{
-  width:10px;height:10px;border-radius:50%;
-  background:rgba(35,210,200,1);
-  box-shadow:0 0 18px rgba(35,210,200,.45);
-}
+.dot{width:10px;height:10px;border-radius:50%;background:rgba(35,210,200,1);box-shadow:0 0 18px rgba(35,210,200,.45)}
 .tipTitle{font-weight:950}
 .tipText{opacity:.9;font-weight:700;line-height:1.4}
 
 .chipGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .chip{
-  padding:10px 10px;
-  border-radius:16px;
-  background:rgba(0,0,0,.22);
+  padding:10px 10px;border-radius:16px;
+  background: rgba(0,0,0,.22);
   border:1px solid rgba(255,255,255,.10);
   transition:.16s ease;
 }
@@ -390,27 +376,23 @@ canvas{width:100%;height:100%;display:block;touch-action:none}
 
 .badgeRow{display:flex;gap:10px;flex-wrap:wrap}
 .badge{
-  font-weight:950;
-  font-size:.9rem;
-  padding:8px 11px;
-  border-radius:999px;
+  font-weight:950;font-size:.9rem;
+  padding:8px 11px;border-radius:999px;
   background:rgba(255,255,255,.06);
   border:1px solid rgba(255,255,255,.12);
-  opacity:.55;
-  transition:.2s ease;
+  opacity:.55;transition:.2s ease;
 }
 .badge.active{
   opacity:1;
-  background:linear-gradient(135deg, rgba(75,123,255,.95), rgba(35,210,200,.95));
-  color:#061018;
-  border:none;
+  background: linear-gradient(135deg, rgba(75,123,255,.95), rgba(35,210,200,.95));
+  color:#061018;border:none;
 }
 
 .bossCard{
   margin-top:12px;
   padding:14px;
   border-radius:24px;
-  background:linear-gradient(135deg, rgba(255,80,190,.18), rgba(255,200,80,.05));
+  background: linear-gradient(135deg, rgba(255,80,190,.18), rgba(255,200,80,.05));
   border:1px solid rgba(255,255,255,.12);
 }
 .bossTitle{font-weight:950;margin-bottom:8px}
@@ -420,9 +402,7 @@ canvas{width:100%;height:100%;display:block;touch-action:none}
    DRAWER
 ========================= */
 .drawer{
-  position:fixed;
-  top:14px;
-  right:14px;
+  position:fixed; top:14px; right:14px;
   width:min(380px,92vw);
   height:calc(100vh - 28px);
   border-radius:28px;
@@ -447,55 +427,97 @@ canvas{width:100%;height:100%;display:block;touch-action:none}
 .drawerList li{margin:7px 0}
 
 /* =========================
-   MOBILE
+   MOBILE CONTROLS
 ========================= */
 .mobileControls{
   display:none;
   width:100%;
   justify-content:center;
   gap:16px;
-  padding:10px 0 16px;
+  padding: 12px 0 18px;
 }
 
 .mobBtn{
   width:64px;
   height:64px;
   border-radius:18px;
-  border:1px solid rgba(255,255,255,0.15);
-  background:rgba(0,0,0,0.45);
-  color:#fff;
-  font-size:26px;
-  font-weight:800;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(0,0,0,0.45);
+  color: white;
+  font-size: 26px;
+  font-weight: 800;
 }
 
 .mobileNote{display:none}
 
-@media (max-width:1100px){
-  .layout{grid-template-columns:1fr}
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 1100px){
+  .layout{grid-template-columns: 1fr}
   .panel{display:none}
 }
 
-@media (max-width:950px){
-  .layout{grid-template-columns:1fr !important}
-  .panel.left,.panel.right{display:none !important}
-}
+@media (max-width: 768px){
+  .mobileControls{ display:flex; }
+  .brandText p{ display:none; }
+  .mobileNote{ display:block; }
 
-@media (max-width:768px){
-  .mobileControls{display:flex}
-  .brandText p{display:none}
-  .stageWrap{height:72vh}
-  .stage{height:72vh}
-  .mobileNote{display:block}
   .app{
-    padding:calc(12px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom));
+    padding: 10px 10px calc(14px + env(safe-area-inset-bottom));
   }
-  .ribbonControls{gap:8px;padding:8px}
-  .ribbonBtn{padding:10px 12px;font-size:.88rem}
+
+  .stage{
+    height: 70vh; /* ✅ big game area */
+  }
+
+  .modeBox{ padding: 8px 10px; }
+  .select{ width: 128px; padding: 9px 10px; }
 }
 
-@media (max-width:520px){
-  .brandText h1{font-size:1.15rem}
-  .modeBox{padding:8px 10px}
-  .select{width:120px;padding:9px 10px}
-  .iconBtn{width:44px;height:44px}
+@media (max-width: 520px){
+  .brandText h1{ font-size: 1.15rem; }
+  .iconBtn{ width: 44px; height: 44px; }
+  .ribbonBtn{ padding: 10px 12px; font-size: .88rem; }
+}
+/* =========================
+   LAPTOP / DESKTOP: BIG FULL HEIGHT GAME
+========================= */
+@media (min-width: 1101px){
+
+  /* app takes full viewport height */
+  .app{
+    min-height: 100vh;
+    height: 100vh;
+  }
+
+  /* layout fills remaining height under topbar */
+  .layout{
+    height: 100%;
+    min-height: 0;
+  }
+
+  /* center game fills the full available height */
+  .gameArea{
+    height: 100%;
+    min-height: 0;
+    grid-template-rows: 1fr;   /* ✅ make stage take full space */
+  }
+
+  /* make stage fill vertically */
+  .stageWrap{
+    height: 100%;
+    min-height: 0;
+  }
+
+  .stage{
+    height: 100%;
+    min-height: 0;
+  }
+
+  /* keep panels same full height */
+  .panel{
+    height: 100%;
+    max-height: none;
+  }
 }
