@@ -32,6 +32,7 @@ const startBtn = document.getElementById("startBtn");
 const pauseBtn = document.getElementById("pauseBtn");
 const restartBtn = document.getElementById("restartBtn");
 const soundBtn = document.getElementById("soundBtn");
+const fullscreenBtn = document.getElementById("fullscreenBtn"); // ✅ Fullscreen
 
 // ✅ In-game ribbon box controls
 const gameRibbonBox = document.getElementById("gameRibbonBox");
@@ -52,9 +53,9 @@ const drawer = document.getElementById("drawer");
 const drawerBtn = document.getElementById("drawerBtn");
 const drawerClose = document.getElementById("drawerClose");
 
-// Mobile controls (added in HTML)
-const mobUp = document.getElementById("mobUp");
-const mobDown = document.getElementById("mobDown");
+// ✅ Mobile controls (correct ids)
+const mobUp = document.getElementById("btnUp");
+const mobDown = document.getElementById("btnDown");
 
 // =====================
 // Utils
@@ -62,13 +63,13 @@ const mobDown = document.getElementById("mobDown");
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 const rr = (a, b) => a + Math.random() * (b - a);
 const rint = (a, b) => (a + Math.floor(Math.random() * (b - a + 1)));
-let touchTargetY = null;     // where finger wants rocket to go
+
+let touchTargetY = null; // where finger wants rocket to go
 let lastTouchY = null;
 
-const TOUCH_SMOOTHING = 0.18;  // lower = smoother (0.10–0.25 best)
-const DEAD_ZONE = 6;           // px ignore micro movements
-const MAX_TOUCH_SPEED = 18;    // px per frame cap speed
-
+const TOUCH_SMOOTHING = 0.18; // lower = smoother (0.10–0.25 best)
+const DEAD_ZONE = 6; // px ignore micro movements
+const MAX_TOUCH_SPEED = 18; // px per frame cap speed
 
 function showOverlay(title, text) {
   overlayTitle.textContent = title;
@@ -97,9 +98,9 @@ function updateBadges() {
 // Mode scaling
 // =====================
 const MODE = {
-  easy:   { speedBase: 6.4, speedMax: 12.5, spawnEvery: 78, spawnMin: 46, gapBase: 182, gapMin: 112, bossPenalty: 16 },
-  medium: { speedBase: 7.2, speedMax: 15.5, spawnEvery: 68, spawnMin: 32, gapBase: 170, gapMin: 92,  bossPenalty: 28 },
-  hard:   { speedBase: 8.0, speedMax: 18.0, spawnEvery: 62, spawnMin: 28, gapBase: 160, gapMin: 84,  bossPenalty: 34 }
+  easy: { speedBase: 6.4, speedMax: 12.5, spawnEvery: 78, spawnMin: 46, gapBase: 182, gapMin: 112, bossPenalty: 16 },
+  medium: { speedBase: 7.2, speedMax: 15.5, spawnEvery: 68, spawnMin: 32, gapBase: 170, gapMin: 92, bossPenalty: 28 },
+  hard: { speedBase: 8.0, speedMax: 18.0, spawnEvery: 62, spawnMin: 28, gapBase: 160, gapMin: 84, bossPenalty: 34 }
 };
 
 function currentMode() {
@@ -148,8 +149,8 @@ const keys = { up: false, down: false };
 const rocket = {
   x: 150,
   y: 200,
-  w: 42,        // reduced
-  h: 21,        // reduced
+  w: 42,
+  h: 21,
   vy: 0,
   accel: 1.45,
   drag: 0.91
@@ -169,11 +170,10 @@ let powerups = [];
 // Active powerups
 const active = { shield: 0, slow: 0, nitro: 0, magnet: 0 };
 
-// Logical stage size (CSS pixels) ✅ (fix DPR issues cleanly)
+// Logical stage size (CSS pixels)
 let W = 0;
 let H = 0;
 
-// Keep rocket in view (after resize / touch)
 function clampRocketIntoView() {
   rocket.y = clamp(rocket.y, rocket.h / 2, H - rocket.h / 2);
 }
@@ -210,12 +210,46 @@ window.addEventListener("orientationchange", resizeCanvasToStage);
 resizeCanvasToStage();
 
 // =====================
+// Fullscreen Support ✅
+// =====================
+function setFullscreenClass(on) {
+  document.body.classList.toggle("fullscreen-game", on);
+}
+
+async function toggleFullscreen() {
+  try {
+    if (!document.fullscreenElement) {
+      await stage.requestFullscreen();
+      setFullscreenClass(true);
+    } else {
+      await document.exitFullscreen();
+      setFullscreenClass(false);
+    }
+  } catch (err) {
+    console.log("Fullscreen error:", err);
+  }
+}
+
+fullscreenBtn?.addEventListener("click", toggleFullscreen);
+
+document.addEventListener("fullscreenchange", () => {
+  setFullscreenClass(!!document.fullscreenElement);
+
+  // resize after entering/exiting fullscreen for sharp rendering
+  setTimeout(() => resizeCanvasToStage(), 60);
+});
+
+// =====================
 // Drawer
 // =====================
-function openDrawer() { drawer.classList.remove("hidden"); }
-function closeDrawer() { drawer.classList.add("hidden"); }
+function openDrawer() {
+  drawer.classList.remove("hidden");
+}
+function closeDrawer() {
+  drawer.classList.add("hidden");
+}
 
-drawerBtn.onclick = () => drawer.classList.contains("hidden") ? openDrawer() : closeDrawer();
+drawerBtn.onclick = () => (drawer.classList.contains("hidden") ? openDrawer() : closeDrawer());
 drawerClose.onclick = closeDrawer;
 
 document.addEventListener("keydown", (e) => {
@@ -289,7 +323,7 @@ function bossGapPenalty() {
 // =====================
 function effectiveSpeed() {
   let sp = state.speed;
-  if (active.slow > 0) sp *= 0.70;
+  if (active.slow > 0) sp *= 0.7;
   if (active.nitro > 0) sp *= 1.25;
   return sp;
 }
@@ -359,7 +393,7 @@ function updateParticles() {
     p.life -= 1;
     p.size *= 0.98;
   }
-  particles = particles.filter(p => p.life > 0 && p.size > 0.5);
+  particles = particles.filter((p) => p.life > 0 && p.size > 0.5);
 }
 
 function drawParticles() {
@@ -479,9 +513,9 @@ function spawnObstacle() {
   const topH = Math.floor(rr(52, H - gap - 52));
   const bottomY = topH + gap;
 
-  const midChance = clamp(0.18 + level * 0.07, 0, 0.90);
+  const midChance = clamp(0.18 + level * 0.07, 0, 0.9);
   const twoMidChance = clamp(level >= 5 ? 0.18 + (level - 5) * 0.08 : 0, 0, 0.65);
-  const spinnerChance = clamp(level >= 4 ? 0.16 + (level - 4) * 0.08 : 0.0, 0, 0.60);
+  const spinnerChance = clamp(level >= 4 ? 0.16 + (level - 4) * 0.08 : 0.0, 0, 0.6);
 
   const mids = [];
   const makeMid = () => {
@@ -496,7 +530,7 @@ function spawnObstacle() {
     let tries = 0;
     let second = makeMid();
     while (tries < 12) {
-      const ok = mids.every(x => Math.abs((x.y + x.h / 2) - (second.y + second.h / 2)) > 40);
+      const ok = mids.every((x) => Math.abs(x.y + x.h / 2 - (second.y + second.h / 2)) > 40);
       if (ok) break;
       second = makeMid();
       tries++;
@@ -547,8 +581,13 @@ function updateObstacles() {
         const topLimit = o.topH + 18;
         const bottomLimit = o.bottomY - mid.h - 18;
 
-        if (mid.y < topLimit) { mid.y = topLimit; mid.dir *= -1; }
-        else if (mid.y > bottomLimit) { mid.y = bottomLimit; mid.dir *= -1; }
+        if (mid.y < topLimit) {
+          mid.y = topLimit;
+          mid.dir *= -1;
+        } else if (mid.y > bottomLimit) {
+          mid.y = bottomLimit;
+          mid.dir *= -1;
+        }
       }
     }
 
@@ -558,15 +597,15 @@ function updateObstacles() {
     }
   }
 
-  obstacles = obstacles.filter(o => o.x + o.w > -140);
+  obstacles = obstacles.filter((o) => o.x + o.w > -140);
 }
 
 function drawObstacle(o) {
   const glow = 0.35 + Math.sin(state.frame * 0.05 + o.seed) * 0.2;
 
   const g = ctx.createLinearGradient(o.x, 0, o.x + o.w, 0);
-  g.addColorStop(0, `rgba(35,210,200,${0.20 + glow})`);
-  g.addColorStop(1, `rgba(65,120,255,${0.20 + glow})`);
+  g.addColorStop(0, `rgba(35,210,200,${0.2 + glow})`);
+  g.addColorStop(1, `rgba(65,120,255,${0.2 + glow})`);
 
   // walls
   ctx.fillStyle = g;
@@ -575,14 +614,9 @@ function drawObstacle(o) {
 
   ctx.save();
   ctx.shadowBlur = 40;
-  ctx.shadowColor = state.boss.active
-  ? "rgba(255,70,140,0.55)"   // boss pink
-  : "rgba(60,255,140,0.60)";    // normal green
+  ctx.shadowColor = state.boss.active ? "rgba(255,70,140,0.55)" : "rgba(60,255,140,0.6)";
 
-  ctx.strokeStyle = state.boss.active
-  ? "rgba(255,255,255,0.25)"
-  : "rgba(60,255,140,0.28)";
-
+  ctx.strokeStyle = state.boss.active ? "rgba(255,255,255,0.25)" : "rgba(60,255,140,0.28)";
   ctx.lineWidth = 1.3;
   ctx.strokeRect(o.x, 0, o.w, o.topH);
   ctx.strokeRect(o.x, o.bottomY, o.w, H - o.bottomY);
@@ -646,7 +680,7 @@ function spawnCoinOrPowerup(gapTop, gapBottom) {
   const level = difficultyLevel();
 
   const coinChance = clamp(0.55 - level * 0.02, 0.25, 0.55);
-  const powerChance = clamp(0.10 + level * 0.01, 0.10, 0.22);
+  const powerChance = clamp(0.1 + level * 0.01, 0.1, 0.22);
 
   const x = W + 90;
   const y = rr(gapTop + 30, gapBottom - 30);
@@ -659,7 +693,7 @@ function spawnCoinOrPowerup(gapTop, gapBottom) {
   }
 
   if (Math.random() < coinChance) {
-    const n = (Math.random() < 0.35) ? 2 : 1;
+    const n = Math.random() < 0.35 ? 2 : 1;
     for (let i = 0; i < n; i++) {
       coins.push({
         x: x + i * 32,
@@ -674,7 +708,6 @@ function spawnCoinOrPowerup(gapTop, gapBottom) {
 function updateCoinsAndPowerups() {
   const sp = effectiveSpeed();
 
-  // coins
   for (const c of coins) {
     c.x -= sp;
     c.spin += 0.15;
@@ -689,9 +722,8 @@ function updateCoinsAndPowerups() {
       }
     }
   }
-  coins = coins.filter(c => c.x > -40);
+  coins = coins.filter((c) => c.x > -40);
 
-  // powerups
   for (const p of powerups) {
     p.x -= sp;
     p.pulse += 0.08;
@@ -706,11 +738,10 @@ function updateCoinsAndPowerups() {
       }
     }
   }
-  powerups = powerups.filter(p => p.x > -60);
+  powerups = powerups.filter((p) => p.x > -60);
 }
 
 function drawCoinsAndPowerups() {
-  // coins
   for (const c of coins) {
     ctx.save();
     ctx.translate(c.x, c.y);
@@ -732,7 +763,6 @@ function drawCoinsAndPowerups() {
     ctx.restore();
   }
 
-  // powerups
   for (const p of powerups) {
     const pulse = 0.7 + Math.sin(p.pulse) * 0.25;
 
@@ -741,10 +771,22 @@ function drawCoinsAndPowerups() {
 
     let col = "rgba(35,210,255,0.65)";
     let txt = "S";
-    if (p.type === "shield") { col = "rgba(35,210,255,0.75)"; txt = "🛡"; }
-    if (p.type === "slow") { col = "rgba(120,200,255,0.75)"; txt = "🐢"; }
-    if (p.type === "nitro") { col = "rgba(255,120,50,0.75)"; txt = "⚡"; }
-    if (p.type === "magnet") { col = "rgba(255,70,210,0.65)"; txt = "🧲"; }
+    if (p.type === "shield") {
+      col = "rgba(35,210,255,0.75)";
+      txt = "🛡";
+    }
+    if (p.type === "slow") {
+      col = "rgba(120,200,255,0.75)";
+      txt = "🐢";
+    }
+    if (p.type === "nitro") {
+      col = "rgba(255,120,50,0.75)";
+      txt = "⚡";
+    }
+    if (p.type === "magnet") {
+      col = "rgba(255,70,210,0.65)";
+      txt = "🧲";
+    }
 
     ctx.shadowBlur = 20;
     ctx.shadowColor = col;
@@ -852,7 +894,6 @@ function checkHit() {
 function checkCollectibles() {
   const R = rocketRect();
 
-  // coins
   for (let i = coins.length - 1; i >= 0; i--) {
     const c = coins[i];
     const cx = clamp(c.x, R.l, R.r);
@@ -863,12 +904,11 @@ function checkCollectibles() {
     if (dx * dx + dy * dy <= c.r * c.r) {
       coins.splice(i, 1);
       state.coinsCollected++;
-      state.score += (active.nitro > 0 ? 8 : 5);
+      state.score += active.nitro > 0 ? 8 : 5;
       beep(1200, 0.04, "sine", 0.03);
     }
   }
 
-  // powerups
   for (let i = powerups.length - 1; i >= 0; i--) {
     const p = powerups[i];
     const cx = clamp(p.x, R.l, R.r);
@@ -889,12 +929,10 @@ function checkCollectibles() {
 function updateBossEvent() {
   if (state.boss.cooldown > 0) state.boss.cooldown--;
 
-  // ✅ lock boss trigger to exact 500 points, prevent double-fire
-  const shouldTrigger = (
+  const shouldTrigger =
     state.score > 0 &&
     state.score % 500 === 0 &&
-    state.score !== state.boss.lastTriggerScore
-  );
+    state.score !== state.boss.lastTriggerScore;
 
   if (!state.boss.active && state.boss.cooldown <= 0 && shouldTrigger) {
     state.boss.active = true;
@@ -1022,9 +1060,30 @@ let downHeld = false;
 function bindHold(btn, setter) {
   if (!btn) return;
 
-  btn.addEventListener("touchstart", (e) => { setter(true); e.preventDefault(); }, { passive: false });
-  btn.addEventListener("touchend", (e) => { setter(false); e.preventDefault(); }, { passive: false });
-  btn.addEventListener("touchcancel", (e) => { setter(false); e.preventDefault(); }, { passive: false });
+  btn.addEventListener(
+    "touchstart",
+    (e) => {
+      setter(true);
+      e.preventDefault();
+    },
+    { passive: false }
+  );
+  btn.addEventListener(
+    "touchend",
+    (e) => {
+      setter(false);
+      e.preventDefault();
+    },
+    { passive: false }
+  );
+  btn.addEventListener(
+    "touchcancel",
+    (e) => {
+      setter(false);
+      e.preventDefault();
+    },
+    { passive: false }
+  );
 
   // desktop mouse support
   btn.addEventListener("mousedown", () => setter(true));
@@ -1032,11 +1091,11 @@ function bindHold(btn, setter) {
   btn.addEventListener("mouseleave", () => setter(false));
 }
 
-bindHold(mobUp, v => upHeld = v);
-bindHold(mobDown, v => downHeld = v);
+bindHold(mobUp, (v) => (upHeld = v));
+bindHold(mobDown, (v) => (downHeld = v));
 
-// ✅ prevent canvas touch from triggering while pressing mobile buttons
-[mobUp, mobDown].forEach(btn => {
+// ✅ prevent canvas swipe from triggering while pressing mobile buttons
+[mobUp, mobDown].forEach((btn) => {
   if (!btn) return;
   btn.addEventListener("touchstart", (e) => e.stopPropagation(), { passive: false });
   btn.addEventListener("touchmove", (e) => e.stopPropagation(), { passive: false });
@@ -1053,32 +1112,38 @@ function applyMobileMovement() {
 // =====================
 // Touch Swipe Controls (mobile smooth)
 // =====================
-canvas.addEventListener("touchstart", (e) => {
-  e.preventDefault();
-  const rect = canvas.getBoundingClientRect();
-  const touchY = e.touches[0].clientY - rect.top;
+canvas.addEventListener(
+  "touchstart",
+  (e) => {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const touchY = e.touches[0].clientY - rect.top;
 
-  touchTargetY = touchY;
-  lastTouchY = touchY;
-}, { passive: false });
+    touchTargetY = touchY;
+    lastTouchY = touchY;
+  },
+  { passive: false }
+);
 
-canvas.addEventListener("touchmove", (e) => {
-  e.preventDefault();
-  const rect = canvas.getBoundingClientRect();
-  const touchY = e.touches[0].clientY - rect.top;
+canvas.addEventListener(
+  "touchmove",
+  (e) => {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const touchY = e.touches[0].clientY - rect.top;
 
-  // Dead zone (ignore very tiny shakes)
-  if (lastTouchY !== null && Math.abs(touchY - lastTouchY) < DEAD_ZONE) return;
+    if (lastTouchY !== null && Math.abs(touchY - lastTouchY) < DEAD_ZONE) return;
 
-  touchTargetY = touchY;
-  lastTouchY = touchY;
-}, { passive: false });
+    touchTargetY = touchY;
+    lastTouchY = touchY;
+  },
+  { passive: false }
+);
 
 canvas.addEventListener("touchend", () => {
   touchTargetY = null;
   lastTouchY = null;
 });
-
 
 // Desktop pointer fallback
 canvas.addEventListener("pointerdown", (e) => {
@@ -1110,20 +1175,16 @@ function update() {
   rocket.vy *= rocket.drag;
   rocket.y += rocket.vy;
 
+  // ✅ smooth swipe target movement
   if (touchTargetY !== null) {
-  const desiredY = touchTargetY - rocket.h / 2; // center rocket on finger
+    const desiredY = touchTargetY - rocket.h / 2;
+    let diff = desiredY - rocket.y;
 
-  let diff = desiredY - rocket.y;
+    diff = Math.max(-MAX_TOUCH_SPEED, Math.min(MAX_TOUCH_SPEED, diff));
+    rocket.y += diff * TOUCH_SMOOTHING;
+  }
 
-  // speed cap (prevents too fast jump)
-  diff = Math.max(-MAX_TOUCH_SPEED, Math.min(MAX_TOUCH_SPEED, diff));
-
-  // smoothing (rocket slowly goes to finger)
-  rocket.y += diff * TOUCH_SMOOTHING;
-}
-
-
-  // mobile button movement (hold)
+  // mobile button movement
   applyMobileMovement();
 
   rocket.y = clamp(rocket.y, -40, H + 40);
@@ -1142,7 +1203,6 @@ function update() {
 
     const m = currentMode();
     if (state.speed < m.speedBase) state.speed = m.speedBase;
-
     state.speed = clamp(state.speed + 0.065, m.speedBase, m.speedMax);
 
     beep(660, 0.03, "sine", 0.015);
@@ -1173,7 +1233,6 @@ function update() {
 
   // hit detection
   if (checkHit()) {
-    // shield save
     if (active.shield > 0) {
       active.shield = 0;
       beep(300, 0.08, "sine", 0.06);
@@ -1182,7 +1241,6 @@ function update() {
       return;
     }
 
-    // actual game over
     state.over = true;
     state.running = false;
     statusEl.textContent = "Game Over";
@@ -1213,7 +1271,7 @@ function update() {
       `Score: ${state.score} • Coins: ${state.coinsCollected}\nPress Enter / Restart`
     );
 
-    showGameRibbonBox(); // ✅ show ribbon after game over
+    showGameRibbonBox();
   }
 }
 
@@ -1271,7 +1329,7 @@ function startGame() {
 
   statusEl.textContent = "Running";
   hideOverlay();
-  hideGameRibbonBox(); // ✅ hide ribbon once started
+  hideGameRibbonBox();
 
   beep(520, 0.07, "triangle", 0.06);
   startMusic();
@@ -1325,7 +1383,7 @@ function resetGame() {
   updateDifficultyUI();
 
   initStars();
-  showGameRibbonBox(); // ✅ show ribbon when ready
+  showGameRibbonBox();
   showOverlay("Rocket Escape", "Press Start / Enter to play.");
 }
 
@@ -1338,16 +1396,13 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "ArrowUp" || k === "w") keys.up = true;
   if (e.key === "ArrowDown" || k === "s") keys.down = true;
 
-  // start
   if ((e.key === "Enter" || e.key === " ") && !state.running && !state.over) startGame();
 
-  // restart after game over
   if (e.key === "Enter" && state.over) {
     resetGame();
     startGame();
   }
 
-  // pause toggle
   if (e.key === "Escape" && !state.over) {
     if (!state.running && !state.paused) return;
     state.paused = !state.paused;
@@ -1359,7 +1414,6 @@ document.addEventListener("keydown", (e) => {
     beep(state.paused ? 220 : 330, 0.07, "sine", 0.05);
   }
 
-  // quick restart
   if (k === "r") {
     resetGame();
     startGame();
@@ -1373,7 +1427,9 @@ document.addEventListener("keyup", (e) => {
 });
 
 // Buttons
-startBtn.onclick = () => { if (!state.running) startGame(); };
+startBtn.onclick = () => {
+  if (!state.running) startGame();
+};
 
 pauseBtn.onclick = () => {
   if (state.over) return;
@@ -1395,13 +1451,17 @@ restartBtn.onclick = () => {
 
 soundBtn.onclick = () => {
   audioOn = !audioOn;
-  soundBtn.textContent = audioOn ? "🔊 Sound: ON" : "🔇 Sound: OFF";
+
+  // If your button is only icon, keep icon:
+  // Otherwise use the old text version if you want.
+  // soundBtn.textContent = audioOn ? "🔊 Sound: ON" : "🔇 Sound: OFF";
+
   soundStateEl.textContent = audioOn ? "ON" : "OFF";
   if (!audioOn) stopMusic();
   else startMusic();
 };
 
-// ✅ In-game ribbon box buttons mapped to your existing buttons
+// ✅ In-game ribbon box buttons mapped to existing buttons
 if (grStart) grStart.onclick = () => startBtn.click();
 if (grRestart) grRestart.onclick = () => restartBtn.click();
 if (grSound) grSound.onclick = () => soundBtn.click();
@@ -1409,16 +1469,6 @@ if (grSound) grSound.onclick = () => soundBtn.click();
 // Mode change
 modeSelect.addEventListener("change", () => {
   resetGame();
-});
-
-// Button micro interactions
-document.querySelectorAll(".btn, .icon-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    btn.animate(
-      [{ transform: "scale(1)" }, { transform: "scale(0.97)" }, { transform: "scale(1)" }],
-      { duration: 140, easing: "ease-out" }
-    );
-  });
 });
 
 // =====================
