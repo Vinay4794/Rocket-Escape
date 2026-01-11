@@ -20,6 +20,11 @@ html, body{
   touch-action: none;       /* ✅ no scroll inside game area */
 }
 
+canvas {
+  touch-action: none;
+}
+
+
 /* =========================
    BACKGROUND (premium neon)
 ========================= */
