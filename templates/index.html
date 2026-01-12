@@ -39,17 +39,7 @@
           </select>
         </div>
 
-        <!-- ✅ Controls ribbon -->
-        <div class="ribbonControls">
-          <button id="soundBtn" class="ribbonBtn" title="Sound">🔊</button>
-          <button id="startBtn" class="ribbonBtn primary" title="Start">Start</button>
-          <button id="pauseBtn" class="ribbonBtn" title="Pause">Pause</button>
-          <button id="restartBtn" class="ribbonBtn" title="Restart">↻</button>
-
-          <!-- ✅ NEW Fullscreen Button -->
-          <button id="fullscreenBtn" class="ribbonBtn" title="Fullscreen">⛶</button>
-        </div>
-
+        <!-- ✅ header stays clean: only drawer button -->
         <button id="drawerBtn" class="iconBtn" title="Menu">☰</button>
       </div>
     </header>
@@ -112,36 +102,82 @@
         </div>
       </aside>
 
+      <!-- ✅ Mobile Fullscreen Tip Popup -->
+      <div class="tipPopupOverlay">
+        <div class="tipPopup">
+          <h2>Mobile Tip</h2>
+          <p>On mobile please select <b>FULL SCREEN</b> option from below to play the game.</p>
+          <label class="tipPopupBtn">
+            OK
+            <input type="checkbox" class="tipCloseCheck" />
+          </label>
+        </div>
+      </div>
+
       <!-- CENTER GAME -->
       <section class="gameArea">
         <div class="stageWrap">
           <div class="stageGlow"></div>
 
-          <!-- ✅ SINGLE correct game container -->
           <div class="stage" id="stageContainer">
-
-            <!-- ✅ ONLY ONE CANVAS -->
             <canvas id="game"></canvas>
 
-            <!-- ✅ Mobile Controls INSIDE game window -->
-        <button id="btnUp" class="mobileBtn">
-  <span class="btnIcon">▲</span>
-</button>
+            <!-- ✅ Premium Mobile Controls (Bottom Corners) -->
+            <button id="btnUp" class="mobileBtn">
+              <span class="btnIcon">▲</span>
+            </button>
+            <button id="btnDown" class="mobileBtn">
+              <span class="btnIcon">▼</span>
+            </button>
 
-<button id="btnDown" class="mobileBtn">
-  <span class="btnIcon">▼</span>
-</button>
-
-
-            <!-- ✅ In-Game Ribbon Box -->
+            <!-- In-Game Ribbon Box -->
             <div id="gameRibbonBox" class="gameRibbonBox">
-              <div class="grTitle">Quick Controls</div>
-              <div class="grBtns">
-                <button id="grStart" class="grBtn primary">Start</button>
-                <button id="grRestart" class="grBtn">Restart</button>
-                <button id="grSound" class="grBtn">🔊</button>
-              </div>
-            </div>
+  <button id="fullscreenBtn" class="iconBtn" aria-label="Fullscreen">
+  <!-- fullscreen icon -->
+  <svg class="fsIcon" viewBox="0 0 24 24" fill="none">
+    <path d="M9 3H5a2 2 0 0 0-2 2v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <path d="M15 3h4a2 2 0 0 1 2 2v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <path d="M9 21H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <path d="M15 21h4a2 2 0 0 0 2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  </svg>
+</button>
+
+
+  <div class="grBtns">
+    <!-- ✅ Skin inside game window -->
+    <select id="skinSelectInGame" class="grSelect">
+      <option value="rocket">Rocket 🚀</option>
+      <option value="rocketBlue">Blue Rocket 🔷</option>
+      <option value="rocketGold">Gold Rocket 🟡</option>
+      <option value="rocketNeon">Neon Rocket ⚡</option>
+      <option value="rocketFire">Fire Rocket 🔥</option>
+
+      <option value="ufo">UFO 🛸</option>
+      <option value="ufoRed">Red UFO 🔴</option>
+      <option value="ufoPurple">Purple UFO 🟣</option>
+      <option value="ufoCyber">Cyber UFO 🤖</option>
+      <option value="ufoAlien">Alien UFO 👽</option>
+    </select>
+
+    <button id="grStart" class="grBtn primary">
+  <span class="ico">▶</span><span class="txt">Start</span>
+</button>
+
+<button id="grPause" class="grBtn">
+  <span class="ico">⏸</span><span class="txt">Pause</span>
+</button>
+
+<button id="grRestart" class="grBtn">
+  <span class="ico">↻</span><span class="txt">Restart</span>
+</button>
+
+<button id="grSound" class="grBtn">
+  <span class="ico">🔊</span><span class="txt">Sound</span>
+</button>
+
+  </div>
+</div>
+
 
             <!-- Overlay -->
             <div id="overlay" class="overlay">
@@ -152,8 +188,37 @@
                 <p class="miniNote mobileNote">Mobile: Swipe OR use ▲ ▼ buttons</p>
               </div>
             </div>
-
           </div>
+        </div>
+
+        <!-- ✅ PORTRAIT: ribbons BELOW game window -->
+        <div class="mobileRibbons">
+
+          <div class="ribbonControls">
+            <label class="settingRow">
+              <span>Skin</span>
+              <select id="skinSelect">
+                <option value="rocket">Rocket 🚀</option>
+                <option value="rocketBlue">Blue Rocket 🔷</option>
+                <option value="rocketGold">Gold Rocket 🟡</option>
+                <option value="rocketNeon">Neon Rocket ⚡</option>
+                <option value="rocketFire">Fire Rocket 🔥</option>
+
+                <option value="ufo">UFO 🛸</option>
+                <option value="ufoRed">Red UFO 🔴</option>
+                <option value="ufoPurple">Purple UFO 🟣</option>
+                <option value="ufoCyber">Cyber UFO 🤖</option>
+                <option value="ufoAlien">Alien UFO 👽</option>
+              </select>
+            </label>
+
+            <button id="soundBtn" class="ribbonBtn" title="Sound">🔊</button>
+            <button id="startBtn" class="ribbonBtn primary" title="Start">Start</button>
+            <button id="pauseBtn" class="ribbonBtn" title="Pause">Pause</button>
+            <button id="restartBtn" class="ribbonBtn" title="Restart">↻</button>
+            <button id="fullscreenBtn" class="ribbonBtn" title="Fullscreen">⛶</button>
+          </div>
+
         </div>
       </section>
 
