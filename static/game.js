@@ -109,9 +109,15 @@ const rint = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 let touchTargetY = null; // where finger wants rocket to go
 let lastTouchY = null;
 
-const TOUCH_SMOOTHING = 0.18; // lower = smoother (0.10–0.25 best)
+let TOUCH_SMOOTHING = 0.15; // lower = smoother (0.10–0.25 best)
 const DEAD_ZONE = 6; // px ignore micro movements
-const MAX_TOUCH_SPEED = 18; // px per frame cap speed
+let MAX_TOUCH_SPEED = 18; // px per frame cap speed
+
+// ✅ Mobile slower movement tuning
+if (window.matchMedia("(max-width: 900px)").matches) {
+  TOUCH_SMOOTHING = 0.11;   // slower follow
+  MAX_TOUCH_SPEED = 9;      // slower max swipe speed
+}
 
 function showOverlay(title, text) {
   overlayTitle.textContent = title;
@@ -197,6 +203,13 @@ const rocket = {
   accel: 1.35,
   drag: 0.91
 };
+
+// ✅ Mobile rocket physics slower
+if (window.matchMedia("(max-width: 900px)").matches) {
+  rocket.accel = 0.95;  // old 1.35
+  rocket.drag = 0.94;   // old 0.91 (more drag = slower movement)
+}
+
 
 // ✅ Hitbox shrink (fair game feel)
 const HITBOX_PAD_X = 7;
@@ -1488,9 +1501,16 @@ bindHold(mobDown, (v) => (downHeld = v));
 
 // ✅✅ REALLY SMOOTH BUTTON MOVEMENT (NEW)
 let btnVel = 0;
-const BTN_MAX_SPEED = 3.6;
-const BTN_ACCEL = 0.16;
-const BTN_FRICTION = 0.88;
+let BTN_MAX_SPEED = 3.6;
+let BTN_ACCEL = 0.16;
+let BTN_FRICTION = 0.88;
+// ✅ Mobile slower button speed tuning
+if (window.matchMedia("(max-width: 900px)").matches) {
+  BTN_MAX_SPEED = 2.0;     // slower up/down button speed
+  BTN_ACCEL = 0.10;        // smoother acceleration
+  BTN_FRICTION = 0.92;     // stronger friction
+}
+
 
 function applyMobileMovement() {
   if (touchTargetY !== null) {
