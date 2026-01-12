@@ -1199,8 +1199,8 @@ body.fullscreen-game .mobileRibbons{
 /* ✅ Mobile controls: round, transparent, smaller */
 @media (max-width: 900px){
   #stageContainer .mobileBtn{
-    width: 84px !important;
-    height: 84px !important;
+    width: 64px !important;
+    height: 64px !important;
     border-radius: 50% !important;
 
     background: rgba(0,0,0,0.22) !important;   /* transparent */
@@ -1227,3 +1227,4 @@ body.fullscreen-game .mobileRibbons{
     transform: scale(0.96);
   }
 }
+
