@@ -1196,16 +1196,11 @@ body.fullscreen-game .mobileRibbons{
     overflow: hidden !important;
   }
 }
-@media (max-width: 900px){
-  #btnUp, #btnDown{
-    bottom: 20% !important;     /* lift from bottom */
-  }
-}
 /* ✅ Mobile controls: round, transparent, smaller */
 @media (max-width: 900px){
   #stageContainer .mobileBtn{
-    width: 54px !important;
-    height: 54px !important;
+    width: 84px !important;
+    height: 84px !important;
     border-radius: 50% !important;
 
     background: rgba(0,0,0,0.22) !important;   /* transparent */
@@ -1232,4 +1227,3 @@ body.fullscreen-game .mobileRibbons{
     transform: scale(0.96);
   }
 }
-
