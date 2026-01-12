@@ -32,6 +32,7 @@ const startBtn = document.getElementById("startBtn");
 const pauseBtn = document.getElementById("pauseBtn");
 const restartBtn = document.getElementById("restartBtn");
 const soundBtn = document.getElementById("soundBtn");
+const fullscreenBtn = document.getElementById("fullscreenBtn"); // ✅ Fullscreen
 // =====================
 // Anti Zoom (iOS safety)
 // =====================
@@ -70,49 +71,6 @@ const drawerClose = document.getElementById("drawerClose");
 const mobUp = document.getElementById("btnUp");
 const mobDown = document.getElementById("btnDown");
 
-const fullscreenBtn = document.getElementById("fullscreenBtn");
-
-async function goFullscreenLandscape(){
-  try{
-    // ✅ go fullscreen (works desktop + mobile)
-    const el = document.getElementById("stageContainer") || document.documentElement;
-
-    if (!document.fullscreenElement){
-      await el.requestFullscreen({ navigationUI: "hide" }).catch(()=> el.requestFullscreen());
-    }
-
-    // ✅ try orientation lock (Android Chrome mostly)
-    const isMobile = window.matchMedia("(max-width: 900px)").matches;
-
-    if (isMobile && screen.orientation && screen.orientation.lock){
-      try{
-        await screen.orientation.lock("landscape");
-      }catch(e){
-        // iPhone Safari often blocks this; ignore silently
-      }
-    }
-  }catch(err){
-    alert("Fullscreen not supported on this browser.");
-    console.log(err);
-  }
-}
-
-fullscreenBtn.addEventListener("click", goFullscreenLandscape);
-
-// Prevent Enter/Space from toggling fullscreen when button is focused
-document.addEventListener("keydown", (e) => {
-  const isFS = !!document.fullscreenElement;
-  const active = document.activeElement;
-
-  // if fullscreen is ON and fullscreen button is focused
-  if (isFS && active && active.id === "fullscreenBtn") {
-    if (e.key === "Enter" || e.key === " " || e.code === "Space") {
-      e.preventDefault();
-      e.stopPropagation();
-      active.blur(); // remove focus from button
-    }
-  }
-});
 
 // =====================
 // Start button only once ✅
@@ -1914,11 +1872,6 @@ if (grStart) {
     startGame();
   };
 }
-const grPause = document.getElementById("grPause");
-
-if (grPause) {
-  grPause.onclick = () => pauseBtn.click(); // ✅ reuse your existing pause logic
-}
 
 if (grRestart) {
   grRestart.onclick = () => {
@@ -1928,37 +1881,15 @@ if (grRestart) {
 }
 
 if (grSound) grSound.onclick = () => soundBtn.click();
-const skinSelectTop = document.getElementById("skinSelect"); // header dropdown
-const skinSelectInGame = document.getElementById("skinSelectInGame"); // in-canvas dropdown
+const skinSelect = document.getElementById("skinSelect");
 
-function syncSkinUI(value){
-  if (skinSelectTop) skinSelectTop.value = value;
-  if (skinSelectInGame) skinSelectInGame.value = value;
-}
+if (skinSelect) {
+  skinSelect.value = currentSkin;
 
-// header select
-if (skinSelectTop) {
-  skinSelectTop.value = currentSkin;
-
-  skinSelectTop.addEventListener("change", () => {
-    setSkin(skinSelectTop.value);
-    syncSkinUI(currentSkin);
+  skinSelect.addEventListener("change", () => {
+    setSkin(skinSelect.value);
   });
 }
-
-// in-game select
-if (skinSelectInGame) {
-  skinSelectInGame.value = currentSkin;
-
-  skinSelectInGame.addEventListener("change", () => {
-    setSkin(skinSelectInGame.value);
-    syncSkinUI(currentSkin);
-  });
-}
-
-// ✅ ensures both show correct default at load
-syncSkinUI(currentSkin);
-
 
 // Mode change
 modeSelect.addEventListener("change", () => {
