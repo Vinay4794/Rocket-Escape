@@ -1157,30 +1157,6 @@ body.fullscreen-game .mobileRibbons{
     padding: 0 12px;
   }
 }
-.iconBtn{
-  width:38px;
-  height:38px;
-  display:grid;
-  place-items:center;
-  border-radius:12px;
-  border:1px solid rgba(255,255,255,.25);
-  background:rgba(0,0,0,.35);
-  color:#fff;
-  cursor:pointer;
-  user-select:none;
-}
-.iconBtn:hover{ background:rgba(0,0,0,.55); }
-
-.fsIcon{
-  width:22px;
-  height:22px;
-}
-/* ✅ Raise mobile buttons from extreme bottom */
-@media (max-width: 900px){
-  #stageContainer .mobileBtn{
-    bottom: 20% !important;     /* ✅ raise up (change 22px to 28px if you want more) */
-  }
-}
 /* ✅ MOBILE ONLY: STOP GAME WINDOW OVERFLOW */
 @media (max-width: 900px){
 
@@ -1220,6 +1196,11 @@ body.fullscreen-game .mobileRibbons{
     overflow: hidden !important;
   }
 }
+@media (max-width: 900px){
+  #btnUp, #btnDown{
+    bottom: 20% !important;     /* lift from bottom */
+  }
+}
 /* ✅ Mobile controls: round, transparent, smaller */
 @media (max-width: 900px){
   #stageContainer .mobileBtn{
@@ -1251,5 +1232,4 @@ body.fullscreen-game .mobileRibbons{
     transform: scale(0.96);
   }
 }
-
 
