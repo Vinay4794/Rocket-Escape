@@ -32,7 +32,20 @@ const startBtn = document.getElementById("startBtn");
 const pauseBtn = document.getElementById("pauseBtn");
 const restartBtn = document.getElementById("restartBtn");
 const soundBtn = document.getElementById("soundBtn");
-const fullscreenBtn = document.getElementById("fullscreenBtn"); // ✅ Fullscreen
+// =====================
+// Anti Zoom (iOS safety)
+// =====================
+let lastTouchEnd = 0;
+document.addEventListener("touchend", (e) => {
+  const now = Date.now();
+  if (now - lastTouchEnd <= 300) e.preventDefault();
+  lastTouchEnd = now;
+}, { passive:false });
+
+document.addEventListener("gesturestart", (e) => e.preventDefault(), { passive:false });
+document.addEventListener("gesturechange", (e) => e.preventDefault(), { passive:false });
+document.addEventListener("gestureend", (e) => e.preventDefault(), { passive:false });
+
 
 // ✅ In-game ribbon box controls
 const gameRibbonBox = document.getElementById("gameRibbonBox");
@@ -56,6 +69,50 @@ const drawerClose = document.getElementById("drawerClose");
 // ✅ Mobile controls (correct ids)
 const mobUp = document.getElementById("btnUp");
 const mobDown = document.getElementById("btnDown");
+
+const fullscreenBtn = document.getElementById("fullscreenBtn");
+
+async function goFullscreenLandscape(){
+  try{
+    // ✅ go fullscreen (works desktop + mobile)
+    const el = document.getElementById("stageContainer") || document.documentElement;
+
+    if (!document.fullscreenElement){
+      await el.requestFullscreen({ navigationUI: "hide" }).catch(()=> el.requestFullscreen());
+    }
+
+    // ✅ try orientation lock (Android Chrome mostly)
+    const isMobile = window.matchMedia("(max-width: 900px)").matches;
+
+    if (isMobile && screen.orientation && screen.orientation.lock){
+      try{
+        await screen.orientation.lock("landscape");
+      }catch(e){
+        // iPhone Safari often blocks this; ignore silently
+      }
+    }
+  }catch(err){
+    alert("Fullscreen not supported on this browser.");
+    console.log(err);
+  }
+}
+
+fullscreenBtn.addEventListener("click", goFullscreenLandscape);
+
+// Prevent Enter/Space from toggling fullscreen when button is focused
+document.addEventListener("keydown", (e) => {
+  const isFS = !!document.fullscreenElement;
+  const active = document.activeElement;
+
+  // if fullscreen is ON and fullscreen button is focused
+  if (isFS && active && active.id === "fullscreenBtn") {
+    if (e.key === "Enter" || e.key === " " || e.code === "Space") {
+      e.preventDefault();
+      e.stopPropagation();
+      active.blur(); // remove focus from button
+    }
+  }
+});
 
 // =====================
 // Start button only once ✅
@@ -176,16 +233,16 @@ const keys = { up: false, down: false };
 const rocket = {
   x: 150,
   y: 200,
-  w: 42,
-  h: 21,
+  w: 44,
+  h: 25,
   vy: 0,
-  accel: 1.45,
+  accel: 1.35,
   drag: 0.91
 };
 
 // ✅ Hitbox shrink (fair game feel)
-const HITBOX_PAD_X = 10;
-const HITBOX_PAD_Y = 6;
+const HITBOX_PAD_X = 7;
+const HITBOX_PAD_Y = 4;
 
 // World objects
 let obstacles = [];
@@ -473,108 +530,400 @@ function updateParticles() {
 }
 
 function drawParticles() {
+  const col = getBurstColors();
+
   for (const p of particles) {
     const a = clamp(p.life / 24, 0, 1);
+
+    ctx.save();
     ctx.globalAlpha = a;
+
+    // glow burst
+    ctx.shadowBlur = 18;
+    ctx.shadowColor = col.glow;
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(255,180,60,0.9)";
+    ctx.fillStyle = col.glow;
     ctx.fill();
+
+    // hot core
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = a * 0.9;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size * 0.55, 0, Math.PI * 2);
+    ctx.fillStyle = col.core;
+    ctx.fill();
+
+    ctx.restore();
   }
+
   ctx.globalAlpha = 1;
 }
 
 // =====================
+// Skins (Rocket/UFO/etc.)
+// =====================
+// =====================
+// Skins (MORE Rockets + MORE UFOs)
+// =====================
+const SKINS = {
+  // Rockets
+  rocket: { name: "Rocket 🚀", kind: "rocket", accent: "pink" },
+  rocketBlue: { name: "Blue Rocket 🔷", kind: "rocket", accent: "blue" },
+  rocketGold: { name: "Gold Rocket 🟡", kind: "rocket", accent: "gold" },
+  rocketNeon: { name: "Neon Rocket ⚡", kind: "rocket", accent: "neon" },
+  rocketFire: { name: "Fire Rocket 🔥", kind: "rocket", accent: "fire" },
+
+  // UFOs
+  ufo: { name: "UFO 🛸", kind: "ufo", accent: "mint" },
+  ufoRed: { name: "Red UFO 🔴", kind: "ufo", accent: "red" },
+  ufoPurple: { name: "Purple UFO 🟣", kind: "ufo", accent: "purple" },
+  ufoCyber: { name: "Cyber UFO 🤖", kind: "ufo", accent: "cyber" },
+  ufoAlien: { name: "Alien UFO 👽", kind: "ufo", accent: "alien" }
+};
+function getBurstColors() {
+  const accent = SKINS[currentSkin]?.accent || "pink";
+
+  // Default burst (warm flame)
+  let core = "rgba(255,220,170,0.95)";
+  let glow = "rgba(255,140,60,0.90)";
+  let smoke = "rgba(255,60,120,0.08)";
+
+  if (accent === "blue") {
+    core = "rgba(220,245,255,0.95)";
+    glow = "rgba(90,200,255,0.95)";
+    smoke = "rgba(90,200,255,0.08)";
+  } else if (accent === "gold") {
+    core = "rgba(255,245,200,0.95)";
+    glow = "rgba(255,200,60,0.95)";
+    smoke = "rgba(255,200,60,0.08)";
+  } else if (accent === "neon") {
+    core = "rgba(230,255,255,0.95)";
+    glow = "rgba(0,255,225,0.95)";
+    smoke = "rgba(0,255,225,0.08)";
+  } else if (accent === "fire") {
+    core = "rgba(255,230,170,0.95)";
+    glow = "rgba(255,70,40,0.95)";
+    smoke = "rgba(255,70,40,0.08)";
+  } else if (accent === "mint") {
+    core = "rgba(225,255,245,0.95)";
+    glow = "rgba(60,255,210,0.95)";
+    smoke = "rgba(60,255,210,0.08)";
+  } else if (accent === "red") {
+    core = "rgba(255,220,220,0.95)";
+    glow = "rgba(255,70,110,0.95)";
+    smoke = "rgba(255,70,110,0.08)";
+  } else if (accent === "purple") {
+    core = "rgba(245,230,255,0.95)";
+    glow = "rgba(180,90,255,0.95)";
+    smoke = "rgba(180,90,255,0.08)";
+  } else if (accent === "cyber") {
+    core = "rgba(225,255,230,0.95)";
+    glow = "rgba(0,255,120,0.95)";
+    smoke = "rgba(0,255,120,0.08)";
+  } else if (accent === "alien") {
+    core = "rgba(250,255,220,0.95)";
+    glow = "rgba(190,255,60,0.95)";
+    smoke = "rgba(190,255,60,0.08)";
+  }
+
+  return { core, glow, smoke };
+}
+
+let currentSkin = localStorage.getItem("rocket_skin") || "rocket";
+
+function setSkin(s) {
+  if (!SKINS[s]) s = "rocket";
+  currentSkin = s;
+  localStorage.setItem("rocket_skin", s);
+}
+
+
+// =====================
 // Rocket Draw
 // =====================
+
+// =====================
+// Rocket Draw (REALISTIC TRI-COLOR)
+// - Top changes by skin
+// - Middle fixed metal silver
+// - Bottom changes by skin
+// =====================
 function drawRocket() {
-  const tilt = clamp(rocket.vy * 0.09, -0.75, 0.75);
+  const tilt = clamp(rocket.vy * 0.06, -0.55, 0.55);
+
+  const accent = SKINS[currentSkin]?.accent || "pink";
+
+  // ✅ Middle always same (real metal)
+  const MID_METAL_A = "rgba(240,248,255,0.98)";
+  const MID_METAL_B = "rgba(150,190,235,0.90)";
+  const MID_METAL_C = "rgba(255,255,255,0.95)";
+  const MID_METAL_D = "rgba(70,110,170,0.80)";
+
+  // ✅ Top + bottom color pair (changes)
+  let TOP = "#ff4da6";
+  let BOT = "#ff2f7d";
+
+  if (accent === "pink")   { TOP = "#ff55b6"; BOT = "#ff2b79"; }
+  if (accent === "blue")   { TOP = "#5bbcff"; BOT = "#1f77ff"; }
+  if (accent === "gold")   { TOP = "#ffd26a"; BOT = "#ffb300"; }
+  if (accent === "neon")   { TOP = "#00ffe1"; BOT = "#00bfff"; }
+  if (accent === "fire")   { TOP = "#ff8a3d"; BOT = "#ff2b2b"; }
+
+  if (accent === "mint")   { TOP = "#4dffcc"; BOT = "#00d9a6"; }
+  if (accent === "red")    { TOP = "#ff5a74"; BOT = "#ff1838"; }
+  if (accent === "purple") { TOP = "#c28cff"; BOT = "#7a2bff"; }
+  if (accent === "cyber")  { TOP = "#00ff66"; BOT = "#00ccff"; }
+  if (accent === "alien")  { TOP = "#caff4d"; BOT = "#7bff2c"; }
 
   ctx.save();
   ctx.translate(rocket.x, rocket.y);
   ctx.rotate(tilt);
 
-  // Core glow
-  ctx.save();
-  ctx.globalAlpha = 0.65;
-  ctx.shadowBlur = 30;
-  ctx.shadowColor = "rgba(35,210,255,0.55)";
-  ctx.beginPath();
-  ctx.ellipse(0, 0, rocket.w * 0.65, rocket.h * 0.85, 0, 0, Math.PI * 2);
-  ctx.fillStyle = "rgba(35,210,255,0.10)";
-  ctx.fill();
-  ctx.restore();
-
-  // Shield effect
+  // ==========================
+  // Shield effect (keep)
+  // ==========================
   if (active.shield > 0) {
     ctx.save();
     const pulse = 0.65 + Math.sin(state.frame * 0.22) * 0.25;
     ctx.globalAlpha = 0.7;
-
-    ctx.shadowBlur = 30;
+    ctx.shadowBlur = 22;
     ctx.shadowColor = "rgba(35,210,255,0.75)";
     ctx.beginPath();
-    ctx.arc(0, 0, 28 + pulse * 3, 0, Math.PI * 2);
+    ctx.arc(0, 0, 30 + pulse * 3, 0, Math.PI * 2);
     ctx.strokeStyle = `rgba(35,210,255,${pulse})`;
     ctx.lineWidth = 3;
     ctx.stroke();
-
     ctx.restore();
   }
 
-  // Body gradient
-  const bodyGrad = ctx.createLinearGradient(-rocket.w / 2, 0, rocket.w / 2, 0);
-  bodyGrad.addColorStop(0, "rgba(255,255,255,0.98)");
-  bodyGrad.addColorStop(0.6, "rgba(200,225,255,0.92)");
-  bodyGrad.addColorStop(1, "rgba(120,200,255,0.85)");
+  const w = rocket.w;
+  const h = rocket.h;
 
+  // section split
+  const topH = h * 0.34;
+  const midH = h * 0.32;
+  const botH = h * 0.34;
+
+  const yTop = -h / 2;
+  const yMid = yTop + topH;
+  const yBot = yMid + midH;
+
+  // ==========================
+  // Realistic metallic mid
+  // ==========================
+  const midGrad = ctx.createLinearGradient(-w / 2, 0, w / 2 + 22, 0);
+  midGrad.addColorStop(0, MID_METAL_A);
+  midGrad.addColorStop(0.35, MID_METAL_B);
+  midGrad.addColorStop(0.6, MID_METAL_C);
+  midGrad.addColorStop(1, MID_METAL_D);
+
+  // ==========================
+  // Top and bottom painted panels
+  // ==========================
+  const topGrad = ctx.createLinearGradient(-w / 2, yTop, w / 2 + 18, yTop);
+  topGrad.addColorStop(0, "rgba(255,255,255,0.30)");
+  topGrad.addColorStop(0.25, TOP);
+  topGrad.addColorStop(1, "rgba(0,0,0,0.15)");
+
+  const botGrad = ctx.createLinearGradient(-w / 2, yBot, w / 2 + 18, yBot);
+  botGrad.addColorStop(0, "rgba(255,255,255,0.25)");
+  botGrad.addColorStop(0.25, BOT);
+  botGrad.addColorStop(1, "rgba(0,0,0,0.18)");
+
+  // ==========================
+  // Draw base capsule body (shadow)
+  // ==========================
+  ctx.save();
   ctx.shadowBlur = 18;
-  ctx.shadowColor = "rgba(65,120,255,0.35)";
-  ctx.fillStyle = bodyGrad;
+  ctx.shadowColor = "rgba(0,0,0,0.35)";
   ctx.beginPath();
-  ctx.roundRect(-rocket.w / 2, -rocket.h / 2, rocket.w, rocket.h, 10);
+  ctx.roundRect(-w / 2, -h / 2, w, h, 12);
+  ctx.fillStyle = "rgba(255,255,255,0.02)";
+  ctx.fill();
+  ctx.restore();
+
+  // TOP
+  ctx.save();
+  ctx.fillStyle = topGrad;
+  ctx.beginPath();
+  ctx.roundRect(-w / 2, yTop, w, topH + 2, 12);
+  ctx.fill();
+  ctx.restore();
+
+  // MID
+  ctx.save();
+  ctx.fillStyle = midGrad;
+  ctx.beginPath();
+  ctx.roundRect(-w / 2, yMid - 1, w, midH + 2, 11);
   ctx.fill();
 
-  // Window
-  ctx.shadowBlur = 0;
+  // metallic shine stripe (realistic reflection)
+  ctx.globalAlpha = 0.16;
+  ctx.fillStyle = "rgba(255,255,255,1)";
   ctx.beginPath();
-  ctx.ellipse(rocket.w * 0.08, -1, rocket.w * 0.18, rocket.h * 0.32, 0, 0, Math.PI * 2);
-  ctx.fillStyle = "rgba(10,20,40,0.78)";
+  ctx.roundRect(-w * 0.10, yMid - 1, w * 0.18, midH + 2, 12);
   ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.restore();
 
-  // Window highlight
+  // BOTTOM
+  ctx.save();
+  ctx.fillStyle = botGrad;
   ctx.beginPath();
-  ctx.ellipse(rocket.w * 0.12, -3, rocket.w * 0.08, rocket.h * 0.16, 0, 0, Math.PI * 2);
-  ctx.fillStyle = "rgba(255,255,255,0.25)";
+  ctx.roundRect(-w / 2, yBot - 2, w, botH + 2, 12);
   ctx.fill();
+  ctx.restore();
 
-  // Nose cone
-  const noseGrad = ctx.createLinearGradient(rocket.w / 2, 0, rocket.w / 2 + 20, 0);
-  noseGrad.addColorStop(0, "rgba(255,80,140,0.95)");
-  noseGrad.addColorStop(1, "rgba(255,210,90,0.95)");
+  // ==========================
+  // Panel seam lines (realistic)
+  // ==========================
+  ctx.save();
+  ctx.globalAlpha = 0.25;
+  ctx.strokeStyle = "rgba(0,0,0,0.7)";
+  ctx.lineWidth = 1;
 
+  ctx.beginPath();
+  ctx.moveTo(-w / 2 + 4, yMid);
+  ctx.lineTo(w / 2 - 4, yMid);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(-w / 2 + 4, yBot);
+  ctx.lineTo(w / 2 - 4, yBot);
+  ctx.stroke();
+  ctx.restore();
+
+  // ==========================
+  // Nose cone (painted top color)
+  // ==========================
+  const noseGrad = ctx.createLinearGradient(w / 2 - 4, 0, w / 2 + 22, 0);
+  noseGrad.addColorStop(0, TOP);
+  noseGrad.addColorStop(0.65, "rgba(255,255,255,0.9)");
+  noseGrad.addColorStop(1, "rgba(0,0,0,0.2)");
+
+  ctx.save();
+  ctx.shadowBlur = 18;
+  ctx.shadowColor = "rgba(80,200,255,0.35)";
   ctx.fillStyle = noseGrad;
   ctx.beginPath();
-  ctx.moveTo(rocket.w / 2, -rocket.h / 2);
-  ctx.lineTo(rocket.w / 2 + 18, 0);
-  ctx.lineTo(rocket.w / 2, rocket.h / 2);
+  ctx.moveTo(w / 2, -h / 2);
+  ctx.lineTo(w / 2 + 22, 0);
+  ctx.lineTo(w / 2, h / 2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  // ==========================
+  // Cockpit glass (realistic)
+  // ==========================
+  ctx.save();
+  ctx.shadowBlur = 20;
+  ctx.shadowColor = "rgba(80,220,255,0.45)";
+  const glass = ctx.createRadialGradient(w * 0.16, -2, 2, w * 0.20, -2, 22);
+  glass.addColorStop(0, "rgba(240,255,255,0.92)");
+  glass.addColorStop(0.3, "rgba(100,220,255,0.85)");
+  glass.addColorStop(1, "rgba(10,30,60,0.78)");
+
+  ctx.fillStyle = glass;
+  ctx.beginPath();
+  ctx.ellipse(w * 0.12, -1, w * 0.22, h * 0.42, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // highlight
+  ctx.globalAlpha = 0.30;
+  ctx.fillStyle = "rgba(255,255,255,0.95)";
+  ctx.beginPath();
+  ctx.ellipse(w * 0.18, -7, w * 0.09, h * 0.16, -0.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // ring
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = "rgba(255,255,255,0.25)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.ellipse(w * 0.12, -1, w * 0.22, h * 0.42, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+
+  // ==========================
+  // Engine ring (metal)
+  // ==========================
+  ctx.save();
+  const ringGrad = ctx.createLinearGradient(-w / 2 - 10, 0, -w / 2 + 14, 0);
+  ringGrad.addColorStop(0, "rgba(25,35,55,0.92)");
+  ringGrad.addColorStop(0.45, "rgba(255,255,255,0.78)");
+  ringGrad.addColorStop(1, "rgba(25,35,55,0.92)");
+
+  ctx.shadowBlur = 14;
+  ctx.shadowColor = "rgba(255,160,60,0.25)";
+  ctx.fillStyle = ringGrad;
+  ctx.beginPath();
+  ctx.roundRect(-w / 2 - 10, -h * 0.26, 16, h * 0.52, 7);
+  ctx.fill();
+  ctx.restore();
+
+  // ==========================
+  // Realistic flame
+  // ==========================
+  const flamePulse = 0.78 + Math.sin(state.frame * 0.32) * 0.25;
+  const flameLen = 18 + flamePulse * 10 + Math.abs(rocket.vy) * 0.25;
+
+  ctx.save();
+  ctx.translate(-w * 0.6, 0);
+
+  // outer flame
+  const flameOuter = ctx.createLinearGradient(0, 0, -flameLen, 0);
+  flameOuter.addColorStop(0, "rgba(255,240,180,0.95)");
+  flameOuter.addColorStop(0.3, "rgba(255,170,60,0.92)");
+  flameOuter.addColorStop(1, "rgba(255,60,80,0.0)");
+
+  ctx.shadowBlur = 20;
+  ctx.shadowColor = "rgba(255,120,60,0.55)";
+  ctx.fillStyle = flameOuter;
+
+  ctx.beginPath();
+  ctx.moveTo(0, -7);
+  ctx.quadraticCurveTo(-flameLen * 0.62, -2, -flameLen, 0);
+  ctx.quadraticCurveTo(-flameLen * 0.62, 2, 0, 7);
   ctx.closePath();
   ctx.fill();
 
-  // Tail fin
-  ctx.save();
-  ctx.globalAlpha = 0.85;
-  ctx.fillStyle = "rgba(65,120,255,0.85)";
+  // inner blue flame
+  const flameInner = ctx.createLinearGradient(0, 0, -flameLen * 0.72, 0);
+  flameInner.addColorStop(0, "rgba(200,255,255,0.95)");
+  flameInner.addColorStop(0.35, "rgba(80,220,255,0.85)");
+  flameInner.addColorStop(1, "rgba(80,220,255,0.0)");
+
+  ctx.shadowBlur = 16;
+  ctx.shadowColor = "rgba(80,220,255,0.55)";
+  ctx.fillStyle = flameInner;
+
   ctx.beginPath();
-  ctx.moveTo(-rocket.w / 2 + 4, -rocket.h / 2);
-  ctx.lineTo(-rocket.w / 2 - 12, -rocket.h / 2 + 6);
-  ctx.lineTo(-rocket.w / 2 + 4, -rocket.h / 2 + 10);
+  ctx.moveTo(0, -4.6);
+  ctx.quadraticCurveTo(-flameLen * 0.50, -1.3, -flameLen * 0.7, 0);
+  ctx.quadraticCurveTo(-flameLen * 0.50, 1.3, 0, 4.6);
   ctx.closePath();
   ctx.fill();
+
+  ctx.restore();
+
+  // ==========================
+  // Final clean outline
+  // ==========================
+  ctx.save();
+  ctx.globalAlpha = 0.22;
+  ctx.strokeStyle = "rgba(255,255,255,0.65)";
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.roundRect(-w / 2, -h / 2, w, h, 12);
+  ctx.stroke();
   ctx.restore();
 
   ctx.restore();
 }
+
 
 // =====================
 // Obstacles
@@ -1565,6 +1914,11 @@ if (grStart) {
     startGame();
   };
 }
+const grPause = document.getElementById("grPause");
+
+if (grPause) {
+  grPause.onclick = () => pauseBtn.click(); // ✅ reuse your existing pause logic
+}
 
 if (grRestart) {
   grRestart.onclick = () => {
@@ -1574,6 +1928,37 @@ if (grRestart) {
 }
 
 if (grSound) grSound.onclick = () => soundBtn.click();
+const skinSelectTop = document.getElementById("skinSelect"); // header dropdown
+const skinSelectInGame = document.getElementById("skinSelectInGame"); // in-canvas dropdown
+
+function syncSkinUI(value){
+  if (skinSelectTop) skinSelectTop.value = value;
+  if (skinSelectInGame) skinSelectInGame.value = value;
+}
+
+// header select
+if (skinSelectTop) {
+  skinSelectTop.value = currentSkin;
+
+  skinSelectTop.addEventListener("change", () => {
+    setSkin(skinSelectTop.value);
+    syncSkinUI(currentSkin);
+  });
+}
+
+// in-game select
+if (skinSelectInGame) {
+  skinSelectInGame.value = currentSkin;
+
+  skinSelectInGame.addEventListener("change", () => {
+    setSkin(skinSelectInGame.value);
+    syncSkinUI(currentSkin);
+  });
+}
+
+// ✅ ensures both show correct default at load
+syncSkinUI(currentSkin);
+
 
 // Mode change
 modeSelect.addEventListener("change", () => {
